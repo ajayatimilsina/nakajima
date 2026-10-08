@@ -31,7 +31,44 @@ label{line-height:1.4}input[type=number]{width:100px}.orders{display:grid;gap:6p
 let MENU=[
  {id:1,cat:'定食',n:'唐揚げ定食',p:800,e:''},{id:2,cat:'定食',n:'あじまる唐揚げ定食',p:900,e:''},{id:3,cat:'定食',n:'とんかつ定食',p:880,e:''},{id:4,cat:'定食',n:'みそとんかつ定食',p:900,e:''},{id:5,cat:'定食',n:'アジフライ定食',p:850,e:''},{id:6,cat:'定食',n:'ミックスフライ定食',p:920,e:''},
  {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:''},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
- {id:14,cat:'ドリンク',n:'生ビール',p:500,e:'🍺'},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'}
+ {id:14,cat:'ドリンク',n:'生ビール',p:550,memberPrice:500,e:'🍺',o:[{n:'男前（大）ジョッキ',p:150}]},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'},
+ {id:43,cat:'ドリンク',n:'ジムビームハイボール',p:480,memberPrice:430,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:44,cat:'ドリンク',n:'角ハイボール',p:490,memberPrice:440,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:45,cat:'ドリンク',n:'ウイスキーコーラハイボール',p:440,memberPrice:390,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:46,cat:'ドリンク',n:'ジンジャーハイボール',p:440,memberPrice:390,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:47,cat:'ドリンク',n:'翠ジンソーダ',p:480,memberPrice:430,e:'🍸'},
+ {id:48,cat:'ドリンク',n:'こだわり酒場のレモンサワー',p:440,memberPrice:390,e:'🍋',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:49,cat:'ドリンク',n:'酎ハイ ウーロン茶',p:440,memberPrice:390,e:'🍵',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:50,cat:'ドリンク',n:'酎ハイ 緑茶',p:440,memberPrice:390,e:'🍵',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:51,cat:'ドリンク',n:'酎ハイ 青リンゴ',p:440,memberPrice:390,e:'🍏',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:52,cat:'ドリンク',n:'酎ハイ 巨峰',p:440,memberPrice:390,e:'🍇',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:53,cat:'ドリンク',n:'酎ハイ グレープフルーツ',p:440,memberPrice:390,e:'🍊',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:54,cat:'ドリンク',n:'酎ハイ カルピス',p:440,memberPrice:390,e:'🥛',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:55,cat:'ドリンク',n:'サントリー生ビール 中瓶',p:660,memberPrice:600,e:'🍺'},
+ {id:56,cat:'ドリンク',n:'大隅（麦）',p:440,memberPrice:390,e:'🥃'},
+ {id:57,cat:'ドリンク',n:'大隅（芋）',p:440,memberPrice:390,e:'🥃'},
+ {id:58,cat:'ドリンク',n:'いいちこ（麦）',p:440,memberPrice:390,e:'🥃'},
+ {id:59,cat:'ドリンク',n:'麦ざかり（麦）',p:440,memberPrice:390,e:'🥃'},
+ {id:60,cat:'ドリンク',n:'黒霧島（芋）',p:440,memberPrice:390,e:'🥃'},
+ {id:61,cat:'ドリンク',n:'芋ざかり（芋）',p:440,memberPrice:390,e:'🥃'},
+ {id:62,cat:'ドリンク',n:'ワイン（赤）',p:440,memberPrice:390,e:'🍷'},
+ {id:63,cat:'ドリンク',n:'ワイン（白）',p:440,memberPrice:390,e:'🍷'},
+ {id:64,cat:'ドリンク',n:'カシスソーダ',p:480,memberPrice:430,e:'🍸'},
+ {id:65,cat:'ドリンク',n:'カシスオレンジ',p:480,memberPrice:430,e:'🍸'},
+ {id:66,cat:'ドリンク',n:'カシスウーロン',p:480,memberPrice:430,e:'🍸'},
+ {id:67,cat:'ドリンク',n:'ピーチソーダ',p:480,memberPrice:430,e:'🍸'},
+ {id:68,cat:'ドリンク',n:'ピーチオレンジ',p:480,memberPrice:430,e:'🍸'},
+ {id:69,cat:'ドリンク',n:'ピーチウーロン',p:480,memberPrice:430,e:'🍸'},
+ {id:70,cat:'ドリンク',n:'梅酒',p:480,memberPrice:430,e:'🥃'},
+ {id:71,cat:'ドリンク',n:'ウーロン茶',p:400,memberPrice:350,e:'🍵'},
+ {id:72,cat:'ドリンク',n:'メロンソーダ',p:400,memberPrice:350,e:'🥤'},
+ {id:73,cat:'ドリンク',n:'緑茶',p:400,memberPrice:350,e:'🍵'},
+ {id:74,cat:'ドリンク',n:'カルピスソーダ',p:400,memberPrice:350,e:'🥤'},
+ {id:75,cat:'ドリンク',n:'ペプシ',p:400,memberPrice:350,e:'🥤'},
+ {id:76,cat:'ドリンク',n:'カルピス',p:400,memberPrice:350,e:'🥛'},
+ {id:77,cat:'ドリンク',n:'ジンジャーエール',p:400,memberPrice:350,e:'🥤'},
+ {id:78,cat:'ドリンク',n:'オレンジジュース',p:400,memberPrice:350,e:'🍊'},
+ {id:79,cat:'ドリンク',n:'オールフリー小瓶',p:440,memberPrice:390,e:'🍺'}
 ];
 const drinkTypes=[{id:1,n:'生'},{id:2,n:'ハイボール'},{id:3,n:'レモンサワー'},{id:4,n:'お茶'},{id:5,n:'麦焼酎'},{id:6,n:'芋焼酎'}];
 const shochuOptions=['水割り','お湯割り','お茶割り','ソーダ割り'];
@@ -47,7 +84,8 @@ const itemOptions=item=>Array.isArray(item.o)&&item.o.length?item.o:item.cat==='
 const optionsUsed=item=>itemOptions(item).reduce((sum,option,i)=>sum+(optQty[item.id+':'+i]||0),0);
 const optionsTotal=item=>itemOptions(item).reduce((sum,option,i)=>sum+option.p*(optQty[item.id+':'+i]||0),0);
 const optionControls=item=>itemOptions(item).map((option,i)=>{const key=item.id+':'+i,current=optQty[key]||0,max=(cart[item.id]||0)-optionsUsed(item)+current;return `<label style="display:block;margin-top:7px">${esc(option.n)}<select onchange="optQty['${key}']=Number(this.value);draw()"><option value="0">なし</option>${Array.from({length:max},(_,k)=>k+1).map(q=>`<option value="${q}" ${current===q?'selected':''}>${q}個</option>`).join('')}</select> +${yen(option.p)} / 個</label>`}).join('');
-let orders=[],table=1,cart={},optQty={},receiptNeeded=false,receiptName='',naanSpice='',otherPreset='',otherName='',otherPrice=100,otherDrinkType=0,otherDrinkOption='',otherDrinkPrice=0,guestType='All',adultCount=2,childCount=0,allergy='なし',orderPending=false,syncMessage='';
+let orders=[],table=1,cart={},optQty={},memberPricing=false,receiptNeeded=false,receiptName='',naanSpice='',otherPreset='',otherName='',otherPrice=100,otherDrinkType=0,otherDrinkOption='',otherDrinkPrice=0,guestType='All',adultCount=2,childCount=0,allergy='なし',orderPending=false,syncMessage='';
+const menuPrice=item=>memberPricing&&Number.isFinite(Number(item.memberPrice))?Number(item.memberPrice):item.p;
 const announcedCalls=new Map();
 const PAY_LINKS={paypay:'',paypal:''};
 function paymentPanel(list){
@@ -59,19 +97,19 @@ function paymentPanel(list){
 }
 function draw(){
  const count=Object.values(cart).reduce((sum,q)=>sum+q,0),people=adultCount+childCount;
- const total=MENU.reduce((sum,item)=>sum+(item.id===15?otherPrice:item.id===16?otherDrinkPrice:item.p)*(cart[item.id]||0)+optionsTotal(item),0);
+ const total=MENU.reduce((sum,item)=>sum+(item.id===15?otherPrice:item.id===16?otherDrinkPrice:menuPrice(item))*(cart[item.id]||0)+optionsTotal(item),0);
  const focusedName=document.activeElement&&document.activeElement.id==='receiptName'?document.activeElement.selectionStart:-1;
  const mine=orders.filter(order=>order.table===table&&!order.paid);
  const counterCalls=mine.filter(order=>order.callCustomerAt);
  document.getElementById('app').innerHTML=`
  <nav class="catnav">${menuGroups().map(([category])=>`<button type="button" onclick="goCat(this.dataset.c)" data-c="${esc(category)}">${esc(category)}</button>`).join('')}</nav>
  <div class="row"><div class="fields"><h1 style="font-size:24px;margin:0">Table ${table}</h1></div></div>
- <div class="panel fields" style="margin-top:10px"><label class="field">大人<select onchange="adultCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${adultCount===i+1?'selected':''}>${i+1}</option>`).join('')}</select></label><label class="field">子ども<select onchange="childCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i}" ${childCount===i?'selected':''}>${i}</option>`).join('')}</select></label><label class="field">性別<select onchange="guestType=this.value;draw()">${['All','Men','Women'].map(value=>`<option ${guestType===value?'selected':''}>${value}</option>`).join('')}</select></label><label class="field">アレルギー<select onchange="allergy=this.value;draw()"><option ${allergy==='なし'?'selected':''}>なし</option><option ${allergy==='あり'?'selected':''}>あり</option></select></label><span class="muted">合計 ${people}名</span></div>
+ <div class="panel fields" style="margin-top:10px"><label class="field">大人<select onchange="adultCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${adultCount===i+1?'selected':''}>${i+1}</option>`).join('')}</select></label><label class="field">子ども<select onchange="childCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i}" ${childCount===i?'selected':''}>${i}</option>`).join('')}</select></label><label class="field">性別<select onchange="guestType=this.value;draw()">${['All','Men','Women'].map(value=>`<option ${value===guestType?'selected':''}>${value}</option>`).join('')}</select></label><label class="field">アレルギー<select onchange="allergy=this.value;draw()"><option ${allergy==='なし'?'selected':''}>なし</option><option ${allergy==='あり'?'selected':''}>あり</option></select></label><label class="field"><input type="checkbox" ${memberPricing?'checked':''} onchange="memberPricing=this.checked;draw()"> 会員価格</label><span class="muted">合計 ${people}名</span></div>
  ${counterCalls.length?`<section role="alert" class="section panel" style="background:#fff3cd;color:#6b4e00;border:2px solid #e0a030"><b>カウンターへお越しください</b>${counterCalls.map(order=>`<div>スタッフからの呼び出し（注文 #${order.id}） <button type="button" onclick="speakCounterCall(${order.table})">音声でもう一度聞く</button></div>`).join('')}</section>`:''}
  ${syncMessage?`<p role="alert" class="muted">${esc(syncMessage)}</p>`:''}
  ${mine.length?`<section class="section panel"><b>注文履歴</b><div class="orders">${mine.map(order=>`<div class="order"><div><b>注文 #${order.id}</b><div class="muted">${order.items.map(item=>`${esc(item.n)} × ${remainingQty(item)}${cancelledQty(item)?`（${cancelledQty(item)}個取消済み）`:''}`).join(', ')}</div><div class="muted">${new Date(order.t).toLocaleTimeString()} · ${yen(order.items.reduce((sum,item)=>sum+item.p*remainingQty(item),0))}</div>${order.callCustomerAt?'<div role="alert" style="margin-top:6px;padding:8px;background:#fff3cd;color:#6b4e00;border-radius:6px;font-weight:bold">お客様をカウンターへお越しください</div>':''}</div><span class="tag ${order.status==='preparing'?'preparing':order.status==='served'?'served':''}">${order.status==='new'?'受付済み':order.status==='preparing'?'調理中':'提供済み'}</span>${order.status!=='served'?`<div class="muted" style="text-align:right;margin-top:4px">お届けまで <b class="timer" data-t="${order.t}"></b></div>`:''}</div>`).join('')}</div></section>`:''}
  ${mine.length?paymentPanel(mine):''}
- ${menuGroups().map(([category,items])=>`<section class="section" id="${catId(category)}" style="scroll-margin-top:64px"><h2 style="font-size:17px;margin:0 0 8px">${esc(category)}</h2>${items.length?'':'<p class="muted">準備中です。</p>'}<div class="grid">${items.map(item=>`<article class="item"${item.x?' style="opacity:.55"':''}><h3>${esc(item.n)}${item.x?' <span class="tag" style="background:#b3261e">欠品</span>':''}</h3>${item.id===15?`<label>内容<select onchange="setOtherPreset(this.value)"><option value="">選択してください</option>${MENU.filter(option=>option.cat==='定食').map(option=>`<option value="${option.id}" ${otherPreset==option.id?'selected':''}>${option.id} ${esc(option.n)} ${yen(option.p)}</option>`).join('')}</select></label><label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherPrice}" onchange="otherPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:item.id===16?`<label>内容<select onchange="setDrinkType(this.value)"><option value="0" ${otherDrinkType===0?'selected':''}>選択してください</option>${drinkTypes.map(option=>`<option value="${option.id}" ${otherDrinkType===option.id?'selected':''}>${option.n}</option>`).join('')}</select></label>${[5,6].includes(otherDrinkType)?`<label style="display:block;margin-top:7px">割り方<select onchange="otherDrinkOption=this.value;draw()"><option value="">選択してください</option>${shochuOptions.map(option=>`<option ${otherDrinkOption===option?'selected':''}>${option}</option>`).join('')}</select></label>`:''}<label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherDrinkPrice}" onchange="otherDrinkPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:`<div class="price">${yen(item.p)}</div>`}${optionControls(item)}${item.id===7?`<label style="display:block;margin-top:7px">辛さ<select onchange="naanSpice=this.value;draw()"><option value="">選択</option>${[0,1,2].map(level=>`<option value="${level}" ${naanSpice==level?'selected':''}>${level}</option>`).join('')}</select></label>`:''}<div class="qty"><button aria-label="${esc(item.n)}を減らす" onclick="changeQty(${item.id},-1)">−</button><b>${cart[item.id]||0}</b><button aria-label="${esc(item.n)}を増やす" onclick="changeQty(${item.id},1)" ${item.x?'disabled':''}>+</button></div></article>`).join('')}</div></section>`).join('')}
+ ${menuGroups().map(([category,items])=>`<section class="section" id="${catId(category)}" style="scroll-margin-top:64px"><h2 style="font-size:17px;margin:0 0 8px">${esc(category)}</h2>${items.length?'':'<p class="muted">準備中です。</p>'}<div class="grid">${items.map(item=>`<article class="item"${item.x?' style="opacity:.55"':''}><h3>${esc(item.n)}${item.x?' <span class="tag" style="background:#b3261e">欠品</span>':''}</h3>${item.id===15?`<label>内容<select onchange="setOtherPreset(this.value)"><option value="">選択してください</option>${MENU.filter(option=>option.cat==='定食').map(option=>`<option value="${option.id}" ${otherPreset==option.id?'selected':''}>${option.id} ${esc(option.n)} ${yen(option.p)}</option>`).join('')}</select></label><label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherPrice}" onchange="otherPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:item.id===16?`<label>内容<select onchange="setDrinkType(this.value)"><option value="0" ${otherDrinkType===0?'selected':''}>選択してください</option>${drinkTypes.map(option=>`<option value="${option.id}" ${otherDrinkType===option.id?'selected':''}>${option.n}</option>`).join('')}</select></label>${[5,6].includes(otherDrinkType)?`<label style="display:block;margin-top:7px">割り方<select onchange="otherDrinkOption=this.value;draw()"><option value="">選択してください</option>${shochuOptions.map(option=>`<option ${otherDrinkOption===option?'selected':''}>${option}</option>`).join('')}</select></label>`:''}<label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherDrinkPrice}" onchange="otherDrinkPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:`<div class="price">${yen(menuPrice(item))}${memberPricing?'（会員価格）':Number.isFinite(Number(item.memberPrice))?'（通常価格）':''}</div>`}${optionControls(item)}${item.id===7?`<label style="display:block;margin-top:7px">辛さ<select onchange="naanSpice=this.value;draw()"><option value="">選択</option>${[0,1,2].map(level=>`<option value="${level}" ${naanSpice==level?'selected':''}>${level}</option>`).join('')}</select></label>`:''}<div class="qty"><button aria-label="${esc(item.n)}を減らす" onclick="changeQty(${item.id},-1)">−</button><b>${cart[item.id]||0}</b><button aria-label="${esc(item.n)}を増やす" onclick="changeQty(${item.id},1)" ${item.x?'disabled':''}>+</button></div></article>`).join('')}</div></section>`).join('')}
  <section class="section panel"><label><input type="checkbox" ${receiptNeeded?'checked':''} onchange="receiptNeeded=this.checked;draw()"> 領収書が必要です</label>${receiptNeeded?`<label class="field" style="margin-top:8px">宛名<input id="receiptName" type="text" maxlength="60" value="${esc(receiptName)}" placeholder="お名前・会社名" oninput="receiptName=this.value" style="flex:1"></label>`:''}</section>
  <div class="summary row"><b>${count}点 · ${yen(total)} · ${people}名</b><button class="primary" ${count&&!orderPending?'':'disabled'} onclick="sendOrder()">${orderPending?'送信中…':'注文する'}</button></div>`;
  if(focusedName>=0){const input=document.getElementById('receiptName');if(input){input.focus();input.setSelectionRange(focusedName,focusedName)}}
@@ -90,7 +128,7 @@ async function sendOrder(){
  const items=MENU.filter(item=>cart[item.id]).flatMap(item=>{
   const chosen=itemOptions(item).map((option,i)=>({option,q:optQty[item.id+':'+i]||0})).filter(entry=>entry.q>0);
   const normal=cart[item.id]-chosen.reduce((sum,entry)=>sum+entry.q,0);
-  const drink=drinkTypes.find(option=>option.id===otherDrinkType),price=item.id===15?otherPrice:item.id===16?otherDrinkPrice:item.p;
+  const drink=drinkTypes.find(option=>option.id===otherDrinkType),price=item.id===15?otherPrice:item.id===16?otherDrinkPrice:menuPrice(item);
   const name=item.id===15?(otherName||item.n):item.id===16?`${drink?drink.n:item.n}${[5,6].includes(otherDrinkType)&&otherDrinkOption?`（${otherDrinkOption}）`:''}`:item.n;
   const spice=item.id===7&&naanSpice!==''?`（辛さ ${naanSpice}）`:'';
   return [normal>0?{n:name+spice,p:price,q:normal}:null,...chosen.map(entry=>({n:`${name}（${entry.option.n}）${spice}`,p:price+entry.option.p,q:entry.q}))].filter(Boolean);

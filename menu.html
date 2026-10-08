@@ -23,13 +23,53 @@ input.n{width:90px}input.w{width:200px}input.s{width:60px}
 <main id="app"></main>
 <script type="module" src="firebase-sync.js"></script>
 <script>
+const DRINK_MENU=[
+ {id:43,cat:'ドリンク',n:'ジムビームハイボール',p:480,memberPrice:430,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:44,cat:'ドリンク',n:'角ハイボール',p:490,memberPrice:440,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:45,cat:'ドリンク',n:'ウイスキーコーラハイボール',p:440,memberPrice:390,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:46,cat:'ドリンク',n:'ジンジャーハイボール',p:440,memberPrice:390,e:'🥃',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:47,cat:'ドリンク',n:'翠ジンソーダ',p:480,memberPrice:430,e:'🍸'},
+ {id:48,cat:'ドリンク',n:'こだわり酒場のレモンサワー',p:440,memberPrice:390,e:'🍋',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:49,cat:'ドリンク',n:'酎ハイ ウーロン茶',p:440,memberPrice:390,e:'🍵',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:50,cat:'ドリンク',n:'酎ハイ 緑茶',p:440,memberPrice:390,e:'🍵',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:51,cat:'ドリンク',n:'酎ハイ 青リンゴ',p:440,memberPrice:390,e:'🍏',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:52,cat:'ドリンク',n:'酎ハイ 巨峰',p:440,memberPrice:390,e:'🍇',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:53,cat:'ドリンク',n:'酎ハイ グレープフルーツ',p:440,memberPrice:390,e:'🍊',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:54,cat:'ドリンク',n:'酎ハイ カルピス',p:440,memberPrice:390,e:'🥛',o:[{n:'男前（大）ジョッキ',p:150}]},
+ {id:55,cat:'ドリンク',n:'サントリー生ビール 中瓶',p:660,memberPrice:600,e:'🍺'},
+ {id:56,cat:'ドリンク',n:'大隅（麦）',p:440,memberPrice:390,e:'🥃'},
+ {id:57,cat:'ドリンク',n:'大隅（芋）',p:440,memberPrice:390,e:'🥃'},
+ {id:58,cat:'ドリンク',n:'いいちこ（麦）',p:440,memberPrice:390,e:'🥃'},
+ {id:59,cat:'ドリンク',n:'麦ざかり（麦）',p:440,memberPrice:390,e:'🥃'},
+ {id:60,cat:'ドリンク',n:'黒霧島（芋）',p:440,memberPrice:390,e:'🥃'},
+ {id:61,cat:'ドリンク',n:'芋ざかり（芋）',p:440,memberPrice:390,e:'🥃'},
+ {id:62,cat:'ドリンク',n:'ワイン（赤）',p:440,memberPrice:390,e:'🍷'},
+ {id:63,cat:'ドリンク',n:'ワイン（白）',p:440,memberPrice:390,e:'🍷'},
+ {id:64,cat:'ドリンク',n:'カシスソーダ',p:480,memberPrice:430,e:'🍸'},
+ {id:65,cat:'ドリンク',n:'カシスオレンジ',p:480,memberPrice:430,e:'🍸'},
+ {id:66,cat:'ドリンク',n:'カシスウーロン',p:480,memberPrice:430,e:'🍸'},
+ {id:67,cat:'ドリンク',n:'ピーチソーダ',p:480,memberPrice:430,e:'🍸'},
+ {id:68,cat:'ドリンク',n:'ピーチオレンジ',p:480,memberPrice:430,e:'🍸'},
+ {id:69,cat:'ドリンク',n:'ピーチウーロン',p:480,memberPrice:430,e:'🍸'},
+ {id:70,cat:'ドリンク',n:'梅酒',p:480,memberPrice:430,e:'🥃'},
+ {id:71,cat:'ドリンク',n:'ウーロン茶',p:400,memberPrice:350,e:'🍵'},
+ {id:72,cat:'ドリンク',n:'メロンソーダ',p:400,memberPrice:350,e:'🥤'},
+ {id:73,cat:'ドリンク',n:'緑茶',p:400,memberPrice:350,e:'🍵'},
+ {id:74,cat:'ドリンク',n:'カルピスソーダ',p:400,memberPrice:350,e:'🥤'},
+ {id:75,cat:'ドリンク',n:'ペプシ',p:400,memberPrice:350,e:'🥤'},
+ {id:76,cat:'ドリンク',n:'カルピス',p:400,memberPrice:350,e:'🥛'},
+ {id:77,cat:'ドリンク',n:'ジンジャーエール',p:400,memberPrice:350,e:'🥤'},
+ {id:78,cat:'ドリンク',n:'オレンジジュース',p:400,memberPrice:350,e:'🍊'},
+ {id:79,cat:'ドリンク',n:'オールフリー小瓶',p:440,memberPrice:390,e:'🍺'}
+];
 const DEFAULT_MENU=[
  {id:1,cat:'定食',n:'唐揚げ定食',p:800,e:''},{id:2,cat:'定食',n:'あじまる唐揚げ定食',p:900,e:''},{id:3,cat:'定食',n:'とんかつ定食',p:880,e:''},{id:4,cat:'定食',n:'みそとんかつ定食',p:900,e:''},{id:5,cat:'定食',n:'アジフライ定食',p:850,e:''},{id:6,cat:'定食',n:'ミックスフライ定食',p:920,e:''},
  {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:''},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
- {id:14,cat:'ドリンク',n:'生ビール',p:500,e:'🍺'},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'}
+ {id:14,cat:'ドリンク',n:'生ビール',p:550,memberPrice:500,e:'🍺',o:[{n:'男前（大）ジョッキ',p:150}]},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'},
+ ...DRINK_MENU
 ];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let menu=DEFAULT_MENU.map(item=>({...item})),isStaff=false,message='';
+let menu=DEFAULT_MENU.map(item=>({...item})),isStaff=false,message='',menuLoaded=false,migrating=false;
 function render(){
   const app=document.getElementById('app');
   document.getElementById('auth').innerHTML=isStaff?`<button onclick="firebaseSync.signOut()">ログアウト</button>`:'';
@@ -40,7 +80,8 @@ function render(){
   ${cats.map(cat=>`<section class="panel"><h2 style="font-size:17px;margin:0 0 6px">${esc(cat)}</h2>${menu.filter(item=>item.cat===cat).map(item=>`<div class="${item.x?'sold':''}" style="border-top:1px solid var(--bd);padding:6px 0">
     <div class="row"><b>#${item.id}</b>${item.x?'<span class="tag">欠品</span>':''}
     <input class="w" value="${esc(item.n)}" placeholder="名前" onchange="edit(${item.id},'n',this.value)">
-    <input class="n" type="number" min="0" step="1" value="${item.p}" onchange="edit(${item.id},'p',Number(this.value))"> 円
+    <input class="n" type="number" min="0" step="1" value="${item.p}" aria-label="通常価格" onchange="edit(${item.id},'p',Number(this.value))"> 円
+    ${Number.isFinite(Number(item.memberPrice))?`会員 <input class="n" type="number" min="0" step="1" value="${item.memberPrice}" aria-label="会員価格" onchange="edit(${item.id},'memberPrice',this.value)"> 円`:''}
     <input class="w" value="${esc(item.cat)}" placeholder="カテゴリ" onchange="edit(${item.id},'cat',this.value)">
     <input class="s" value="${esc(item.e)}" placeholder="絵文字" maxlength="4" onchange="edit(${item.id},'e',this.value)">
     <button onclick="toggleSold(${item.id})">${item.x?'販売再開':'欠品にする'}</button><button class="danger" onclick="removeItem(${item.id})">削除</button></div>
@@ -52,7 +93,7 @@ async function save(){
   render();
 }
 function find(id){return menu.find(item=>item.id===id)}
-function edit(id,key,value){const item=find(id);if(!item)return;if(key==='p')value=Math.max(0,Math.round(value)||0);if(key==='n'&&!String(value).trim()){render();return}if(key==='cat'&&!String(value).trim()){render();return}item[key]=value;save()}
+function edit(id,key,value){const item=find(id);if(!item)return;if(key==='memberPrice'){if(String(value).trim()==='')delete item.memberPrice;else item.memberPrice=Math.max(0,Math.round(Number(value))||0)}else{if(key==='p')value=Math.max(0,Math.round(value)||0);if(key==='n'&&!String(value).trim()){render();return}if(key==='cat'&&!String(value).trim()){render();return}item[key]=value}save()}
 function toggleSold(id){const item=find(id);if(!item)return;if(item.x)delete item.x;else item.x=true;save()}
 function removeItem(id){const item=find(id);if(!item||!confirm(`「${item.n}」を削除しますか？`))return;menu=menu.filter(entry=>entry.id!==id);save()}
 function addItem(){
@@ -77,10 +118,35 @@ function editOption(id,index,key,value){
 function removeOption(id,index){const item=find(id);if(!item||!item.o)return;item.o.splice(index,1);if(!item.o.length)delete item.o;save()}
 window.addEventListener('firebase-auth-changed',async event=>{
   isStaff=event.detail.isStaff;
-  if(isStaff){try{await firebaseSync.ensureMenu(DEFAULT_MENU)}catch(error){message='メニューを読み込めません。'}}
+  if(isStaff){
+    try{await firebaseSync.ensureMenu(DEFAULT_MENU);await mergeDrinkMenu()}
+    catch(error){message='メニューを読み込めません。'}
+  }
   render();
 });
-window.addEventListener('firebase-menu',event=>{if(Array.isArray(event.detail.menu)){menu=event.detail.menu;render()}});
+async function mergeDrinkMenu(){
+  if(!isStaff||!menuLoaded||migrating)return;
+  const ids=new Set(menu.map(item=>item.id));
+  const additions=DRINK_MENU.filter(item=>!ids.has(item.id));
+  const candidate=menu.map(item=>({...item}));
+  const beer=candidate.find(item=>item.id===14);
+  const updateBeer=beer&&!Number.isFinite(Number(beer.memberPrice))&&beer.p===500;
+  if(!additions.length&&!updateBeer)return;
+  migrating=true;
+  if(updateBeer){beer.memberPrice=500;beer.p=550;beer.o=[{n:'男前（大）ジョッキ',p:150}]}
+  const nextMenu=[...candidate,...additions.map(item=>({...item}))];
+  await firebaseSync.saveMenu(nextMenu);
+  menu=nextMenu;
+  message=`ドリンクメニューを${additions.length}品追加しました。`;
+  render();
+  migrating=false;
+}
+window.addEventListener('firebase-menu',event=>{
+  if(Array.isArray(event.detail.menu)){
+    menu=event.detail.menu;menuLoaded=true;render();
+    mergeDrinkMenu().catch(error=>{migrating=false;message='新ドリンクを保存できませんでした。Firebaseルールを更新してください。';render()});
+  }
+});
 window.addEventListener('firebase-sync-error',event=>{message=event.detail?.message||'データベースに接続できません。';render()});
 render();
 </script>

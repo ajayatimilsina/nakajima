@@ -93,6 +93,9 @@
         "p": {
           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
         },
+        "memberPrice": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
+        },
         "e": {
           ".validate": "newData.isString() && newData.val().length <= 16"
         },

@@ -45,6 +45,7 @@ function normalizeMenu(menu) {
       p: Number(item.p),
       e: String(item.e || '')
     };
+    if (Number.isFinite(Number(item.memberPrice))) record.memberPrice = Number(item.memberPrice);
     if (item.x) record.x = true;
     if (options.length) record.o = options;
     return record;
