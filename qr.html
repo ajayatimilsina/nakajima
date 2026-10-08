@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>あじまるや | テーブルQRコード</title>
+<style>
+body{margin:0;font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;color:#000;background:#fff}
+.bar{padding:12px 16px;border-bottom:1px solid #ddd;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.bar button{font:inherit;padding:8px 14px;border:1px solid #0f5c7a;background:#0f5c7a;color:#fff;border-radius:6px;cursor:pointer}
+.bar input{font:inherit;padding:6px 8px;width:380px;max-width:100%}
+.sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px}
+.card{border:1px dashed #888;border-radius:6px;padding:10px 6px;text-align:center;break-inside:avoid;page-break-inside:avoid}
+.card b{display:block;font-size:22px}.card small{display:block;font-size:11px}.card svg{width:100%;max-width:150px;height:auto}
+@media print{.bar{display:none}.sheet{grid-template-columns:repeat(4,1fr);gap:4mm;padding:0}@page{size:A4;margin:10mm}.card{padding:4mm 2mm}}
+</style>
+</head>
+<body>
+<div class="bar"><b>テーブルQRコード（1〜40）</b><label>URL <input id="base"></label><button onclick="window.print()">印刷</button></div>
+<div class="sheet" id="sheet"></div>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+const base=document.getElementById('base');
+base.value=location.href.replace(/qr\.html.*$/,'');
+function build(){
+  const root=base.value.trim().replace(/#.*$/,'');
+  const sheet=document.getElementById('sheet');
+  sheet.innerHTML='';
+  for(let t=1;t<=40;t++){
+    const qr=qrcode(0,'M');
+    qr.addData(`${root}#t=${t}`);
+    qr.make();
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`<b>Table ${t}</b>${qr.createSvgTag({cellSize:4,margin:2,scalable:true})}<small>スキャンしてご注文</small>`;
+    sheet.appendChild(card);
+  }
+}
+base.addEventListener('change',build);
+build();
+</script>
+</body>
+</html>

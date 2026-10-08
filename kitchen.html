@@ -31,9 +31,9 @@ function render(){
   if(!isStaff){app.innerHTML=`<p>スタッフ用Googleアカウントでログインしてください。</p><button class="primary" onclick="login()">Googleでログイン</button>${message?`<p role="alert">${esc(message)}</p>`:''}`;return}
   const active=orders.filter(order=>!order.paid&&order.status!=='served').sort((a,b)=>a.t-b.t);
   app.innerHTML=`${message?`<p role="alert">${esc(message)}</p>`:''}${active.length?`<div class="grid">${active.map(order=>{
-    const time=new Date(order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),mins=Math.max(0,Math.floor((Date.now()-order.t)/60000));
+    const time=new Date(order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
     return `<div class="card ${order.status==='preparing'?'preparing':'new'}"><div class="row"><b style="font-size:26px">Table ${order.table}</b><span class="tag">${order.status==='new'?'新規':'調理中'}</span></div>
-    <div class="muted">#${order.id} · ${time}（${mins}分前）· 大人${order.adultCount} 子${order.childCount}</div>
+    <div class="row"><span class="muted">#${order.id} · ${time} · 大人${order.adultCount} 子${order.childCount}</span><b class="timer" data-t="${order.t}" style="font-size:26px"></b></div>
     ${order.allergy==='あり'?'<div class="allergy">⚠ アレルギーあり</div>':''}
     <div style="margin:8px 0">${order.items.map(item=>`<div class="item">${esc(item.n)} × ${item.q}</div>`).join('')}</div>
     <div class="row">${order.status==='new'?`<button class="primary" onclick="setStatus('${order.key}','preparing')">調理開始</button>`:''}<button class="primary" onclick="setStatus('${order.key}','served')">提供済み</button></div></div>`}).join('')}</div>`:'<p class="muted">調理待ちの注文はありません。</p>'}`;
@@ -48,6 +48,17 @@ window.addEventListener('firebase-orders',event=>{
   knownKeys=keys;render();
 });
 window.addEventListener('firebase-sync-error',event=>{message=event.detail?.message||'データベースに接続できません。';render()});
+const LIMIT_MS=20*60*1000;
+function tick(){
+  document.querySelectorAll('.timer').forEach(el=>{
+    const left=Number(el.dataset.t)+LIMIT_MS-Date.now(),abs=Math.abs(left),text=`${String(Math.floor(abs/60000)).padStart(2,'0')}:${String(Math.floor(abs/1000)%60).padStart(2,'0')}`;
+    el.textContent=left>=0?text:'+'+text;
+    el.style.color=left<0?'#ff5252':left<5*60000?'#e0a030':'#5fc283';
+  });
+}
+setInterval(tick,1000);
+const baseRender=render;
+render=function(){baseRender();tick()};
 setInterval(()=>{if(isStaff)render()},60000);
 render();
 </script>
