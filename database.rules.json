@@ -52,6 +52,18 @@
         },
         "customerUid": {
           ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.email === 'ajayatimilsina1@gmail.com')"
+        },
+        "receiptName": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "kitchenPrinted": {
+          ".validate": "newData.isBoolean() && auth.token.email === 'ajayatimilsina1@gmail.com'"
+        },
+        "payMethod": {
+          ".validate": "(newData.val() === 'cash' || newData.val() === 'credit' || newData.val() === 'paypay') && auth.token.email === 'ajayatimilsina1@gmail.com'"
+        },
+        "paidAt": {
+          ".validate": "newData.isNumber() && auth.token.email === 'ajayatimilsina1@gmail.com'"
         }
       }
     },
@@ -74,6 +86,20 @@
         },
         "e": {
           ".validate": "newData.isString() && newData.val().length <= 16"
+        },
+        "x": {
+          ".validate": "newData.isBoolean()"
+        },
+        "o": {
+          "$optionId": {
+            ".validate": "newData.hasChildren(['n', 'p'])",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+            },
+            "p": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
+            }
+          }
         }
       }
     }

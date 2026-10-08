@@ -34,13 +34,21 @@ function isStaff(user) {
 
 function normalizeMenu(menu) {
   const values = (Array.isArray(menu) ? menu : Object.values(menu || {})).filter(item => item && typeof item === 'object');
-  return values.map(item => ({
-    id: Number(item.id),
-    cat: String(item.cat || ''),
-    n: String(item.n || ''),
-    p: Number(item.p),
-    e: String(item.e || '')
-  })).sort((a, b) => a.id - b.id);
+  return values.map(item => {
+    const options = (Array.isArray(item.o) ? item.o : Object.values(item.o || {}))
+      .filter(option => option && typeof option === 'object' && option.n)
+      .map(option => ({ n: String(option.n), p: Number(option.p) || 0 }));
+    const record = {
+      id: Number(item.id),
+      cat: String(item.cat || ''),
+      n: String(item.n || ''),
+      p: Number(item.p),
+      e: String(item.e || '')
+    };
+    if (item.x) record.x = true;
+    if (options.length) record.o = options;
+    return record;
+  }).sort((a, b) => a.id - b.id);
 }
 
 function menuRecord(menu) {

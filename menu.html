@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>あじまるや | メニュー管理</title>
+<style>
+:root{box-sizing:border-box;--bg:#f7f4ef;--card:#fff;--tx:#1e2a32;--mut:#6b7780;--ac:#0f5c7a;--bd:#ddd6ca;--ok:#2f7d4f}
+@media(prefers-color-scheme:dark){:root{--bg:#14191d;--card:#1e262c;--tx:#eceae4;--mut:#9aa6ae;--ac:#5bb5d6;--bd:#33404a;--ok:#5fc283}}
+*{box-sizing:inherit}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header b{font-size:18px}header a{color:var(--ac)}main{max-width:1000px;margin:auto;padding:14px}
+button,select,input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:8px 10px}
+button{cursor:pointer}.primary{background:var(--ac);color:#fff;border-color:var(--ac)}.danger{color:#b3261e}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-top:12px}.muted{color:var(--mut)}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}.sold{opacity:.65}
+.tag{display:inline-block;background:#b3261e;color:#fff;border-radius:99px;padding:2px 8px;font-size:12px}
+input.n{width:90px}input.w{width:200px}input.s{width:60px}
+</style>
+</head>
+<body>
+<header><b>メニュー管理</b><a href="admin.html">お会計・厨房</a><a href="index.html">お客様画面</a><span id="auth"></span></header>
+<main id="app"></main>
+<script type="module" src="firebase-sync.js"></script>
+<script>
+const DEFAULT_MENU=[
+ {id:1,cat:'定食',n:'唐揚げ定食',p:800,e:''},{id:2,cat:'定食',n:'あじまる唐揚げ定食',p:900,e:''},{id:3,cat:'定食',n:'とんかつ定食',p:880,e:''},{id:4,cat:'定食',n:'みそとんかつ定食',p:900,e:''},{id:5,cat:'定食',n:'アジフライ定食',p:850,e:''},{id:6,cat:'定食',n:'ミックスフライ定食',p:920,e:''},
+ {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:''},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
+ {id:14,cat:'ドリンク',n:'生ビール',p:500,e:'🍺'},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'}
+];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let menu=DEFAULT_MENU.map(item=>({...item})),isStaff=false,message='';
+function render(){
+  const app=document.getElementById('app');
+  document.getElementById('auth').innerHTML=isStaff?`<button onclick="firebaseSync.signOut()">ログアウト</button>`:'';
+  if(!isStaff){app.innerHTML=`<div class="panel"><p>スタッフ用Googleアカウントでログインしてください。</p><button class="primary" onclick="login()">Googleでログイン</button>${message?`<p role="alert">${esc(message)}</p>`:''}</div>`;return}
+  const cats=[...new Set(menu.map(item=>item.cat))];
+  app.innerHTML=`${message?`<p role="alert" class="panel">${esc(message)}</p>`:''}
+  <div class="row"><button class="primary" onclick="addItem()">＋ メニューを追加</button></div>
+  ${cats.map(cat=>`<section class="panel"><h2 style="font-size:17px;margin:0 0 6px">${esc(cat)}</h2>${menu.filter(item=>item.cat===cat).map(item=>`<div class="${item.x?'sold':''}" style="border-top:1px solid var(--bd);padding:6px 0">
+    <div class="row"><b>#${item.id}</b>${item.x?'<span class="tag">欠品</span>':''}
+    <input class="w" value="${esc(item.n)}" placeholder="名前" onchange="edit(${item.id},'n',this.value)">
+    <input class="n" type="number" min="0" step="1" value="${item.p}" onchange="edit(${item.id},'p',Number(this.value))"> 円
+    <input class="w" value="${esc(item.cat)}" placeholder="カテゴリ" onchange="edit(${item.id},'cat',this.value)">
+    <input class="s" value="${esc(item.e)}" placeholder="絵文字" maxlength="4" onchange="edit(${item.id},'e',this.value)">
+    <button onclick="toggleSold(${item.id})">${item.x?'販売再開':'欠品にする'}</button><button class="danger" onclick="removeItem(${item.id})">削除</button></div>
+    <div class="row muted">オプション：${(item.o||[]).map((option,i)=>`<span><input class="w" value="${esc(option.n)}" onchange="editOption(${item.id},${i},'n',this.value)"> +<input class="n" type="number" min="0" step="1" value="${option.p}" onchange="editOption(${item.id},${i},'p',Number(this.value))">円 <button class="danger" onclick="removeOption(${item.id},${i})">×</button></span>`).join('')}<button onclick="addOption(${item.id})">＋ オプション</button></div></div>`).join('')}</section>`).join('')}`;
+}
+async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
+async function save(){
+  try{await firebaseSync.saveMenu(menu);message=''}catch(error){message='保存できませんでした。通信状態とログインを確認してください。'}
+  render();
+}
+function find(id){return menu.find(item=>item.id===id)}
+function edit(id,key,value){const item=find(id);if(!item)return;if(key==='p')value=Math.max(0,Math.round(value)||0);if(key==='n'&&!String(value).trim()){render();return}if(key==='cat'&&!String(value).trim()){render();return}item[key]=value;save()}
+function toggleSold(id){const item=find(id);if(!item)return;if(item.x)delete item.x;else item.x=true;save()}
+function removeItem(id){const item=find(id);if(!item||!confirm(`「${item.n}」を削除しますか？`))return;menu=menu.filter(entry=>entry.id!==id);save()}
+function addItem(){
+  const cat=prompt('カテゴリ','定食');if(!cat)return;
+  const n=prompt('メニュー名');if(!n)return;
+  const p=Number(prompt('価格（円）','0'));
+  menu.push({id:Math.max(0,...menu.map(item=>item.id))+1,cat:cat.trim(),n:n.trim(),p:Math.max(0,Math.round(p)||0),e:''});
+  save();
+}
+function addOption(id){
+  const item=find(id);if(!item)return;
+  const n=prompt('オプション名（例：ご飯大盛り）');if(!n)return;
+  const p=Number(prompt('追加料金（円）','0'));
+  item.o=[...(item.o||[]),{n:n.trim(),p:Math.max(0,Math.round(p)||0)}];save();
+}
+function editOption(id,index,key,value){
+  const item=find(id);if(!item||!item.o||!item.o[index])return;
+  if(key==='p')value=Math.max(0,Math.round(value)||0);
+  if(key==='n'&&!String(value).trim()){render();return}
+  item.o[index][key]=value;save();
+}
+function removeOption(id,index){const item=find(id);if(!item||!item.o)return;item.o.splice(index,1);if(!item.o.length)delete item.o;save()}
+window.addEventListener('firebase-auth-changed',async event=>{
+  isStaff=event.detail.isStaff;
+  if(isStaff){try{await firebaseSync.ensureMenu(DEFAULT_MENU)}catch(error){message='メニューを読み込めません。'}}
+  render();
+});
+window.addEventListener('firebase-menu',event=>{if(Array.isArray(event.detail.menu)){menu=event.detail.menu;render()}});
+window.addEventListener('firebase-sync-error',event=>{message=event.detail?.message||'データベースに接続できません。';render()});
+render();
+</script>
+</body>
+</html>

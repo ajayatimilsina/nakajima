@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>あじまるや | お会計・厨房</title>
+<style>
+:root{box-sizing:border-box;--bg:#f7f4ef;--card:#fff;--tx:#1e2a32;--mut:#6b7780;--ac:#0f5c7a;--bd:#ddd6ca;--ok:#2f7d4f}
+@media(prefers-color-scheme:dark){:root{--bg:#14191d;--card:#1e262c;--tx:#eceae4;--mut:#9aa6ae;--ac:#5bb5d6;--bd:#33404a;--ok:#5fc283}}
+*{box-sizing:inherit}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header b{font-size:18px}header a{color:var(--ac)}main{max-width:1000px;margin:auto;padding:14px}
+button,select,input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:8px 10px}
+button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--ac);color:#fff;border-color:var(--ac)}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-top:12px}.muted{color:var(--mut)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+h2{font-size:17px;margin:0 0 8px}table{border-collapse:collapse;width:100%}td,th{border-top:1px solid var(--bd);padding:6px;text-align:left}td.n,th.n{text-align:right}
+.tag{display:inline-block;background:var(--ac);color:#fff;border-radius:99px;padding:2px 8px;font-size:12px}
+#printArea{display:none}
+@media print{body>*:not(#printArea){display:none!important}#printArea{display:block}body{background:#fff;color:#000}}
+.slip{width:72mm;font:14px/1.4 "MS Gothic",monospace;color:#000;page-break-after:always;break-after:page}
+.slip h3{margin:0 0 4px;font-size:18px}.slip .big{font-size:22px;font-weight:bold}.slip hr{border:0;border-top:1px dashed #000}
+.slip table td,.slip table th{border:0;padding:1px 0}
+</style>
+</head>
+<body>
+<header>
+  <b>あじまるや お会計・厨房</b>
+  <a href="menu.html">メニュー管理</a><a href="index.html">お客様画面</a>
+  <span id="auth" class="muted"></span>
+  <label><input type="checkbox" id="auto" checked> 新規注文を厨房に自動印刷</label>
+</header>
+<main id="app"></main>
+<div id="printArea"></div>
+<script type="module" src="firebase-sync.js"></script>
+<script>
+const yen=n=>'¥'+Math.round(n).toLocaleString();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const METHODS={cash:'現金',credit:'クレジット',paypay:'PayPay'};
+const total=order=>order.items.reduce((sum,item)=>sum+item.p*item.q,0);
+const dayKey=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+let orders=[],isStaff=false,day=dayKey(Date.now()),message='';
+const printQueue=[];let printing=false;
+
+function render(){
+  const app=document.getElementById('app');
+  document.getElementById('auth').innerHTML=isStaff?`<button onclick="firebaseSync.signOut()">ログアウト</button>`:'';
+  if(!isStaff){app.innerHTML=`<div class="panel"><p>スタッフ用Googleアカウントでログインしてください。</p><button class="primary" onclick="login()">Googleでログイン</button>${message?`<p role="alert">${esc(message)}</p>`:''}</div>`;return}
+  const open=orders.filter(order=>!order.paid),tables=[...new Set(open.map(order=>order.table))].sort((a,b)=>a-b);
+  const paid=orders.filter(order=>order.paid&&dayKey(order.paidAt||order.t)===day);
+  const sums=Object.fromEntries(Object.keys(METHODS).map(key=>[key,{count:0,amount:0}]));
+  paid.forEach(order=>{const entry=sums[order.payMethod]||(sums[order.payMethod]={count:0,amount:0});entry.count++;entry.amount+=total(order)});
+  const grand=Object.values(sums).reduce((sum,entry)=>sum+entry.amount,0);
+  app.innerHTML=`${message?`<p role="alert" class="panel">${esc(message)}</p>`:''}
+  <section class="panel"><h2>厨房（1品ずつ印刷）</h2><div class="row"><span class="muted">未印刷の注文：${orders.filter(o=>o.status==='new'&&!o.kitchenPrinted).length}件</span><button onclick="printPendingKitchen()">未印刷を今すぐ印刷</button></div></section>
+  <section class="panel"><h2>お会計（未会計テーブル）</h2>${tables.length?`<div class="grid">${tables.map(t=>{const list=open.filter(order=>order.table===t),sum=list.reduce((s,order)=>s+total(order),0),names=[...new Set(list.map(order=>order.receiptName).filter(Boolean))];
+    return `<div class="panel" style="margin:0"><div class="row"><b>Table ${t}</b><b>${yen(sum)}</b></div>
+    <table>${list.flatMap(order=>order.items.map(item=>`<tr><td>${esc(item.n)}</td><td class="n">×${item.q}</td><td class="n">${yen(item.p*item.q)}</td></tr>`)).join('')}</table>
+    ${names.length?`<p class="muted">領収書宛名：${esc(names.join(' / '))}</p>`:''}
+    <div class="row" style="margin-top:8px"><button onclick="printReceipt(${t})">レシート</button><button onclick="printInvoice(${t})">領収書</button></div>
+    <div class="row" style="margin-top:8px">${Object.entries(METHODS).map(([key,label])=>`<button class="primary" onclick="pay(${t},'${key}')">${label}で会計</button>`).join('')}</div></div>`}).join('')}</div>`:'<p class="muted">未会計の注文はありません。</p>'}</section>
+  <section class="panel"><div class="row"><h2>集計結果</h2><input type="date" value="${day}" onchange="day=this.value;render()"></div>
+  <table><tr><th>支払方法</th><th class="n">件数</th><th class="n">金額</th></tr>${Object.entries(sums).map(([key,entry])=>`<tr><td>${esc(METHODS[key]||key)}</td><td class="n">${entry.count}</td><td class="n">${yen(entry.amount)}</td></tr>`).join('')}<tr><th>合計</th><th class="n">${paid.length}</th><th class="n">${yen(grand)}</th></tr></table>
+  <div class="row" style="margin-top:8px"><button onclick="printDaily()">集計結果を印刷</button></div></section>`;
+}
+async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
+function printHtml(html){
+  document.getElementById('printArea').innerHTML=html;
+  window.print();
+}
+function runQueue(){
+  if(printing||!printQueue.length)return;
+  printing=true;
+  const job=printQueue.shift();
+  printHtml(job.html);
+  setTimeout(()=>{printing=false;runQueue()},600);
+}
+function enqueue(html){printQueue.push({html});runQueue()}
+function kitchenHtml(order){
+  const time=new Date(order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  return order.items.map((item,i)=>`<div class="slip"><h3>厨房 Table ${order.table}</h3><div>注文 #${order.id} · ${time} · ${order.items.length}品中 ${i+1}</div><hr><div class="big">${esc(item.n)} × ${item.q}</div><hr><div>人数 大人${order.adultCount} 子${order.childCount}${order.allergy==='あり'?' ／ <b>アレルギーあり</b>':''}</div></div>`).join('');
+}
+async function printKitchen(order){
+  try{await firebaseSync.updateOrder(order.key,{kitchenPrinted:true})}catch(error){message='印刷済みの記録に失敗しました。';render();return}
+  enqueue(kitchenHtml(order));
+}
+function printPendingKitchen(){orders.filter(order=>order.status==='new'&&!order.kitchenPrinted).forEach(printKitchen)}
+function tableOrders(t){return orders.filter(order=>!order.paid&&order.table===t)}
+function receiptBody(t,list){
+  const sum=list.reduce((s,order)=>s+total(order),0);
+  const rows=list.flatMap(order=>order.items).map(item=>`<tr><td>${esc(item.n)}</td><td style="text-align:right">×${item.q}</td><td style="text-align:right">${yen(item.p*item.q)}</td></tr>`).join('');
+  return {sum,html:`<table style="width:100%">${rows}</table><hr><div class="big" style="display:flex;justify-content:space-between"><span>合計</span><span>${yen(sum)}</span></div>`};
+}
+function printReceipt(t){
+  const list=tableOrders(t),body=receiptBody(t,list);
+  enqueue(`<div class="slip"><h3>あじまるや & 中島駅</h3><div>レシート Table ${t}</div><div>${new Date().toLocaleString('ja-JP')}</div><hr>${body.html}</div>`);
+}
+function printInvoice(t){
+  const list=tableOrders(t),body=receiptBody(t,list);
+  const names=[...new Set(list.map(order=>order.receiptName).filter(Boolean))];
+  const name=prompt('領収書の宛名',names[0]||'');
+  if(name===null)return;
+  enqueue(`<div class="slip"><h3>領 収 書</h3><div class="big">${esc(name||'　　　　　')} 様</div><div class="big">${yen(body.sum)}</div><div>但し お飲食代として</div><div>${new Date().toLocaleDateString('ja-JP')}</div><hr><div>あじまるや & 中島駅</div></div>`);
+}
+async function pay(t,method){
+  const list=tableOrders(t);if(!list.length)return;
+  const sum=list.reduce((s,order)=>s+total(order),0);
+  if(!confirm(`Table ${t} ${yen(sum)} を${METHODS[method]}で会計しますか？`))return;
+  const paidAt=Date.now();
+  try{await Promise.all(list.map(order=>firebaseSync.updateOrder(order.key,{paid:true,payMethod:method,paidAt,status:'served'})));message=''}
+  catch(error){message='会計を保存できませんでした。通信状態を確認してください。'}
+  render();
+}
+function printDaily(){
+  const paid=orders.filter(order=>order.paid&&dayKey(order.paidAt||order.t)===day);
+  const rows=Object.entries(METHODS).map(([key,label])=>{const list=paid.filter(order=>order.payMethod===key);return `<tr><td>${label}</td><td style="text-align:right">${list.length}件</td><td style="text-align:right">${yen(list.reduce((s,order)=>s+total(order),0))}</td></tr>`}).join('');
+  enqueue(`<div class="slip"><h3>集計結果 ${esc(day)}</h3><hr><table style="width:100%">${rows}</table><hr><div class="big" style="display:flex;justify-content:space-between"><span>合計</span><span>${yen(paid.reduce((s,order)=>s+total(order),0))}</span></div></div>`);
+}
+window.addEventListener('firebase-auth-changed',event=>{isStaff=event.detail.isStaff;if(!isStaff)orders=[];render()});
+window.addEventListener('firebase-orders',event=>{
+  const before=new Set(orders.map(order=>order.key));
+  orders=event.detail.orders;
+  if(document.getElementById('auto').checked)orders.filter(order=>order.status==='new'&&!order.kitchenPrinted&&!printedKeys.has(order.key)).forEach(order=>{printedKeys.add(order.key);printKitchen(order)});
+  render();
+});
+const printedKeys=new Set();
+window.addEventListener('firebase-sync-error',event=>{message=event.detail?.message||'データベースに接続できません。';render()});
+render();
+</script>
+</body>
+</html>
