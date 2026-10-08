@@ -58,10 +58,6 @@ function scheduleOrderSpeech(order){
   if(speechEnabled)speakText(orderSpeechText(order));
   else speechQueue.set(order.key,order);
 }
-function readOrderAloud(key){
-  const order=orders.find(entry=>entry.key===key);
-  if(order&&speakText(orderSpeechText(order))){speechQueue.delete(key);render()}
-}
 function toggleSpeech(){
   if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
     message='この端末またはブラウザーは音声読み上げに対応していません。';
@@ -73,11 +69,10 @@ function toggleSpeech(){
     const queued=[...speechQueue.values()];
     speechQueue.clear();
     if(queued.length)queued.forEach(order=>speakText(orderSpeechText(order)));
-    else speakText('注文の音声読み上げを有効にしました。');
-    message='注文の音声読み上げを有効にしました。';
+    message='新しい注文を自動で1回読み上げます。';
   }else{
     speechSynthesis.cancel();
-    message='注文の音声読み上げを停止しました。';
+    message='注文の自動読み上げを停止しました。';
   }
   render();
 }
@@ -87,13 +82,13 @@ function render(){
   if(!isStaff){app.innerHTML=`<p>スタッフ用Googleアカウントでログインしてください。</p><button class="primary" onclick="login()">Googleでログイン</button>${message?`<p role="alert">${esc(message)}</p>`:''}`;return}
   const active=orders.filter(order=>!order.paid&&order.status!=='served').sort((a,b)=>a.t-b.t);
   const status=`<p class="muted">ログイン中：${esc(staffEmail)} ・ 受信した注文：${orders.length}件${connected?'':' ・ ⚠ 接続待ち'}</p>`;
-  app.innerHTML=`${status}<div class="row" style="margin:10px 0"><span>注文読み上げ：${speechEnabled?'有効':'無効'}${speechQueue.size?` ・ 未読み上げ ${speechQueue.size}件`:''}</span><button onclick="toggleSpeech()">${speechEnabled?'読み上げを停止':'注文読み上げを有効化'}</button></div>${message?`<p role="alert" style="color:#ff8a80">${esc(message)}</p>`:''}${active.length?`<div class="grid">${active.map(order=>{
+  app.innerHTML=`${status}<div class="row" style="margin:10px 0"><span>注文の自動読み上げ：${speechEnabled?'有効（新規注文ごとに1回）':'無効'}${speechQueue.size?` ・ 未読み上げ ${speechQueue.size}件`:''}</span><button onclick="toggleSpeech()">${speechEnabled?'自動読み上げを停止':'自動読み上げを有効化'}</button></div>${message?`<p role="alert" style="color:#ff8a80">${esc(message)}</p>`:''}${active.length?`<div class="grid">${active.map(order=>{
     const time=new Date(order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
     return `<div class="card ${order.status==='preparing'?'preparing':'new'}"><div class="row"><b style="font-size:26px">Table ${order.table}</b><span class="tag">${order.status==='new'?'新規':'調理中'}</span></div>
     <div class="row"><span class="muted">#${order.id} · ${time} · 大人${order.adultCount} 子${order.childCount}</span><b class="timer" data-t="${order.t}" style="font-size:26px"></b></div>
     ${order.allergy==='あり'?'<div class="allergy">⚠ アレルギーあり</div>':''}
     <div style="margin:8px 0">${order.items.map((item,index)=>`<div class="item ${remainingQty(item)===0?'cancelled':''}">${esc(item.n)} × ${item.q}${cancelledQty(item)?`（${cancelledQty(item)}個取消済み）`:''}${remainingQty(item)>0?` <button style="padding:4px 8px;font-size:14px\" onclick=\"cancelItem('${order.key}',${index})\">1個取消</button>`:''}</div>`).join('')}</div>
-    <div class="row"><button onclick="readOrderAloud('${order.key}')">注文を読み上げる</button>${order.status==='new'?`<button class="primary" onclick="setStatus('${order.key}','preparing')">調理開始</button>`:''}<button onclick="callCustomer('${order.key}')">お客様をカウンターへ呼び出す</button>${order.callCustomerAt?`<button onclick="acknowledgeCall(${order.table})">呼び出し解除</button>`:''}<button class="primary" onclick="setStatus('${order.key}','served')">提供済み</button></div>${order.callCustomerAt?'<p class="allergy">カウンター呼び出し中</p>':''}</div>`}).join('')}</div>`:'<p class="muted">調理待ちの注文はありません。</p>'}`;
+    <div class="row">${order.status==='new'?`<button class="primary" onclick="setStatus('${order.key}','preparing')">調理開始</button>`:''}<button onclick="callCustomer('${order.key}')">お客様をカウンターへ呼び出す</button>${order.callCustomerAt?`<button onclick="acknowledgeCall(${order.table})">呼び出し解除</button>`:''}<button class="primary" onclick="setStatus('${order.key}','served')">提供済み</button></div>${order.callCustomerAt?'<p class="allergy">カウンター呼び出し中</p>':''}</div>`}).join('')}</div>`:'<p class="muted">調理待ちの注文はありません。</p>'}`;
 }
 async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
 async function setStatus(key,status){try{await firebaseSync.updateOrder(key,{status});message=''}catch(error){message='更新できませんでした。通信状態を確認してください。'}render()}
