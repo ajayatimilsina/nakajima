@@ -1,0 +1,175 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
+import { get, getDatabase, onChildAdded, onChildChanged, onChildRemoved, onValue, push, ref, remove, set, update } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyAk81HxCeRB3IGekGcsE9OVHmi1sFdLwYM',
+  authDomain: 'ajimaru-bcbef.firebaseapp.com',
+  databaseURL: 'https://ajimaru-bcbef-default-rtdb.firebaseio.com',
+  projectId: 'ajimaru-bcbef',
+  storageBucket: 'ajimaru-bcbef.firebasestorage.app',
+  messagingSenderId: '893250502168',
+  appId: '1:893250502168:web:76740b65a9ca60953fcd6d',
+  measurementId: 'G-H39ZKMVY25'
+};
+
+const STAFF_EMAIL = 'ajayatimilsina1@gmail.com';
+const CUSTOMER_ORDER_KEYS = 'hh_customer_order_keys';
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+const ownOrders = new Map();
+const customerListeners = new Set();
+const watchedOrders = new Map();
+const staffOrders = new Map();
+let staffOrdersListener = null;
+
+function emit(name, detail) {
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
+
+function isStaff(user) {
+  return Boolean(user && !user.isAnonymous && user.email?.toLowerCase() === STAFF_EMAIL);
+}
+
+function normalizeMenu(menu) {
+  const values = (Array.isArray(menu) ? menu : Object.values(menu || {})).filter(item => item && typeof item === 'object');
+  return values.map(item => ({
+    id: Number(item.id),
+    cat: String(item.cat || ''),
+    n: String(item.n || ''),
+    p: Number(item.p),
+    e: String(item.e || '')
+  })).sort((a, b) => a.id - b.id);
+}
+
+function menuRecord(menu) {
+  return Object.fromEntries(normalizeMenu(menu).map(item => [String(item.id), item]));
+}
+
+function customerOrderKeys() {
+  try {
+    const keys = JSON.parse(localStorage.getItem(CUSTOMER_ORDER_KEYS) || '[]');
+    return Array.isArray(keys) ? keys.filter(key => typeof key === 'string') : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function publishCustomerOrders() {
+  const orders = [...ownOrders.values()].sort((a, b) => a.t - b.t);
+  customerListeners.forEach(listener => listener(orders));
+}
+
+function watchCustomerOrder(key, uid) {
+  if (watchedOrders.has(key)) return;
+  const unsubscribe = onValue(ref(database, `orders/${key}`), snapshot => {
+    const order = snapshot.val();
+    if (order && order.customerUid === uid) ownOrders.set(key, { ...order, key });
+    else ownOrders.delete(key);
+    publishCustomerOrders();
+  }, error => emit('firebase-sync-error', { message: error.message }));
+  watchedOrders.set(key, unsubscribe);
+}
+
+async function ensureCustomer() {
+  if (!auth.currentUser) await signInAnonymously(auth);
+  return auth.currentUser;
+}
+
+async function startCustomer(onOrders) {
+  customerListeners.add(onOrders);
+  const user = await ensureCustomer();
+  customerOrderKeys().forEach(key => watchCustomerOrder(key, user.uid));
+  publishCustomerOrders();
+  return () => customerListeners.delete(onOrders);
+}
+
+async function createCustomerOrder(order) {
+  const user = await ensureCustomer();
+  const orderRef = push(ref(database, 'orders'));
+  const record = { ...order, customerUid: user.uid };
+  await set(orderRef, record);
+  const keys = customerOrderKeys();
+  if (!keys.includes(orderRef.key)) {
+    keys.push(orderRef.key);
+    localStorage.setItem(CUSTOMER_ORDER_KEYS, JSON.stringify(keys));
+  }
+  watchCustomerOrder(orderRef.key, user.uid);
+  return { ...record, key: orderRef.key };
+}
+
+async function signInStaff() {
+  const result = await signInWithPopup(auth, new GoogleAuthProvider());
+  if (!isStaff(result.user)) {
+    await signOut(auth);
+    throw new Error(`Staff access is limited to ${STAFF_EMAIL}.`);
+  }
+  return result.user;
+}
+
+async function ensureMenu(defaultMenu) {
+  if (!isStaff(auth.currentUser)) throw new Error('Staff sign-in required.');
+  const menuRef = ref(database, 'menu');
+  const snapshot = await get(menuRef);
+  if (!snapshot.exists()) await set(menuRef, menuRecord(defaultMenu));
+}
+
+async function saveMenu(menu) {
+  if (!isStaff(auth.currentUser)) throw new Error('Staff sign-in required.');
+  await set(ref(database, 'menu'), menuRecord(menu));
+}
+
+onValue(ref(database, 'menu'), snapshot => {
+  emit('firebase-menu', { menu: snapshot.exists() ? normalizeMenu(snapshot.val()) : null });
+}, error => emit('firebase-sync-error', { message: error.message }));
+
+function listenForStaffOrders(user) {
+  if (!isStaff(user) || staffOrdersListener) return;
+  const ordersRef = ref(database, 'orders');
+  const publish = () => emit('firebase-orders', {
+    orders: [...staffOrders.values()].sort((a, b) => a.t - b.t)
+  });
+  const handleError = error => emit('firebase-sync-error', { message: error.message });
+  const stopAdded = onChildAdded(ordersRef, snapshot => {
+    staffOrders.set(snapshot.key, { ...snapshot.val(), key: snapshot.key });
+    publish();
+  }, handleError);
+  const stopChanged = onChildChanged(ordersRef, snapshot => {
+    staffOrders.set(snapshot.key, { ...snapshot.val(), key: snapshot.key });
+    publish();
+  }, handleError);
+  const stopRemoved = onChildRemoved(ordersRef, snapshot => {
+    staffOrders.delete(snapshot.key);
+    publish();
+  }, handleError);
+  staffOrdersListener = () => {
+    stopAdded();
+    stopChanged();
+    stopRemoved();
+    staffOrders.clear();
+  };
+}
+
+onAuthStateChanged(auth, user => {
+  const staff = isStaff(user);
+  if (staff) listenForStaffOrders(user);
+  else if (staffOrdersListener) {
+    staffOrdersListener();
+    staffOrdersListener = null;
+  }
+  emit('firebase-auth-changed', { isStaff: staff, email: staff ? user.email : '' });
+});
+
+window.firebaseSync = {
+  createCustomerOrder,
+  ensureMenu,
+  saveMenu,
+  signInStaff,
+  signOut: () => signOut(auth),
+  updateOrder: (key, patch) => update(ref(database, `orders/${key}`), patch),
+  deleteOrder: key => remove(ref(database, `orders/${key}`)),
+  startCustomer
+};
+
+emit('firebase-sync-ready', {});

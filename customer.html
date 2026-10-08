@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>あじまるや | ご注文</title>
+<style>
+:root{box-sizing:border-box;--bg:#f7f4ef;--card:#fff;--tx:#1e2a32;--mut:#6b7780;--ac:#0f5c7a;--bd:#ddd6ca;--ok:#2f7d4f}
+@media(prefers-color-scheme:dark){:root{--bg:#14191d;--card:#1e262c;--tx:#eceae4;--mut:#9aa6ae;--ac:#5bb5d6;--bd:#33404a;--ok:#5fc283}}
+*{box-sizing:inherit}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--bd);padding:14px max(16px,calc((100vw - 980px)/2))}
+header b{font-size:18px}main{max-width:980px;margin:auto;padding:14px}
+button,select,input{font:inherit;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:8px 10px}
+button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--ac);color:#fff;border-color:var(--ac)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:5px 0;flex-wrap:wrap}.fields{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.field{display:flex;align-items:center;gap:6px}.muted{color:var(--mut)}.section{margin-top:18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px}
+.item,.panel{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px}.item h3{margin:0 0 5px;font-size:16px}.price{color:var(--mut)}.qty{display:flex;align-items:center;gap:12px;margin-top:10px}.qty button{min-width:40px;font-size:19px}
+.tag{display:inline-block;background:var(--ac);color:white;border-radius:99px;padding:2px 8px;font-size:12px}.preparing{background:#bd7917}.served{background:var(--ok)}
+.summary{position:sticky;bottom:0;margin:14px 0 0;padding:12px;background:var(--card);border:1px solid var(--bd);border-radius:8px;box-shadow:0 -4px 18px #0001}
+label{line-height:1.4}input[type=number]{width:100px}.orders{display:grid;gap:6px}.order{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--bd)}
+@media(max-width:520px){header{padding:12px 14px}main{padding:12px}.fields{align-items:stretch}.field{justify-content:space-between;width:100%}.field select{max-width:60%}.item{padding:10px}}
+</style>
+</head>
+<body>
+<header><b>あじまるや & 中島駅</b><span class="muted"> · ご注文</span></header>
+<main id="app"></main>
+<script type="module" src="firebase-sync.js"></script>
+<script>
+let MENU=[
+ {id:1,cat:'定食',n:'唐揚げ定食',p:800,e:''},{id:2,cat:'定食',n:'あじまる唐揚げ定食',p:900,e:''},{id:3,cat:'定食',n:'とんかつ定食',p:880,e:''},{id:4,cat:'定食',n:'みそとんかつ定食',p:900,e:''},{id:5,cat:'定食',n:'アジフライ定食',p:850,e:''},{id:6,cat:'定食',n:'ミックスフライ定食',p:920,e:''},
+ {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:''},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
+ {id:14,cat:'ドリンク',n:'生ビール',p:500,e:'🍺'},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'}
+];
+const drinkTypes=[{id:1,n:'生'},{id:2,n:'ハイボール'},{id:3,n:'レモンサワー'},{id:4,n:'お茶'},{id:5,n:'麦焼酎'},{id:6,n:'芋焼酎'}];
+const shochuOptions=['水割り','お湯割り','お茶割り','ソーダ割り'];
+const menuGroups=()=>[...new Set(['定食','ラーメン','ナンセット','サブメニュー','ドリンク','居酒屋メニュー','飲み放題ドリンク',...MENU.map(item=>item.cat)])].filter(category=>MENU.some(item=>item.cat===category)).map(category=>[category,MENU.filter(item=>item.cat===category)]);
+const yen=n=>'¥'+Math.round(n).toLocaleString();
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let orders=[],table=1,cart={},riceLarge={},naanSpice='',otherPreset='',otherName='',otherPrice=100,otherDrinkType=0,otherDrinkOption='',otherDrinkPrice=0,guestType='All',adultCount=2,childCount=0,allergy='なし',orderPending=false,syncMessage='';
+function draw(){
+ const count=Object.values(cart).reduce((sum,q)=>sum+q,0),people=adultCount+childCount;
+ const total=MENU.reduce((sum,item)=>sum+(item.id===15?otherPrice:item.id===16?otherDrinkPrice:item.p)*(cart[item.id]||0)+100*(riceLarge[item.id]||0),0);
+ const mine=orders.filter(order=>order.table===table&&!order.paid);
+ document.getElementById('app').innerHTML=`
+ <div class="row"><div class="fields"><h1 style="font-size:24px;margin:0">Table ${table}</h1></div></div>
+ <div class="panel fields" style="margin-top:10px"><label class="field">大人<select onchange="adultCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${adultCount===i+1?'selected':''}>${i+1}</option>`).join('')}</select></label><label class="field">子ども<select onchange="childCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i}" ${childCount===i?'selected':''}>${i}</option>`).join('')}</select></label><label class="field">性別<select onchange="guestType=this.value;draw()">${['All','Men','Women'].map(value=>`<option ${guestType===value?'selected':''}>${value}</option>`).join('')}</select></label><label class="field">アレルギー<select onchange="allergy=this.value;draw()"><option ${allergy==='なし'?'selected':''}>なし</option><option ${allergy==='あり'?'selected':''}>あり</option></select></label><span class="muted">合計 ${people}名</span></div>
+ ${syncMessage?`<p role="alert" class="muted">${esc(syncMessage)}</p>`:''}
+ ${mine.length?`<section class="section panel"><b>注文履歴</b><div class="orders">${mine.map(order=>`<div class="order"><div><b>注文 #${order.id}</b><div class="muted">${order.items.map(item=>`${esc(item.n)} × ${item.q}`).join(', ')}</div><div class="muted">${new Date(order.t).toLocaleTimeString()} · ${yen(order.items.reduce((sum,item)=>sum+item.p*item.q,0))}</div></div><span class="tag ${order.status==='preparing'?'preparing':order.status==='served'?'served':''}">${order.status==='new'?'受付済み':order.status==='preparing'?'調理中':'提供済み'}</span></div>`).join('')}</div></section>`:''}
+ ${menuGroups().map(([category,items])=>`<section class="section"><h2 style="font-size:17px;margin:0 0 8px">${category}</h2><div class="grid">${items.map(item=>`<article class="item"><h3>${esc(item.n)}</h3>${item.id===15?`<label>内容<select onchange="setOtherPreset(this.value)"><option value="">選択してください</option>${MENU.filter(option=>option.cat==='定食').map(option=>`<option value="${option.id}" ${otherPreset==option.id?'selected':''}>${option.id} ${esc(option.n)} ${yen(option.p)}</option>`).join('')}</select></label><label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherPrice}" onchange="otherPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:item.id===16?`<label>内容<select onchange="setDrinkType(this.value)"><option value="0" ${otherDrinkType===0?'selected':''}>選択してください</option>${drinkTypes.map(option=>`<option value="${option.id}" ${otherDrinkType===option.id?'selected':''}>${option.n}</option>`).join('')}</select></label>${[5,6].includes(otherDrinkType)?`<label style="display:block;margin-top:7px">割り方<select onchange="otherDrinkOption=this.value;draw()"><option value="">選択してください</option>${shochuOptions.map(option=>`<option ${otherDrinkOption===option?'selected':''}>${option}</option>`).join('')}</select></label>`:''}<label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherDrinkPrice}" onchange="otherDrinkPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:`<div class="price">${yen(item.p)}</div>`}${item.cat==='定食'?`<label style="display:block;margin-top:7px">ご飯大盛り<select onchange="riceLarge[${item.id}]=Number(this.value);draw()"><option value="0" ${!riceLarge[item.id]?'selected':''}>普通</option>${Array.from({length:cart[item.id]||0},(_,i)=>i+1).map(q=>`<option value="${q}" ${riceLarge[item.id]===q?'selected':''}>${q}個を大盛り</option>`).join('')}</select> +${yen(100)} / 個</label>`:''}${item.id===7?`<label style="display:block;margin-top:7px">辛さ<select onchange="naanSpice=this.value;draw()"><option value="">選択</option>${[0,1,2].map(level=>`<option value="${level}" ${naanSpice==level?'selected':''}>${level}</option>`).join('')}</select></label>`:''}<div class="qty"><button aria-label="${esc(item.n)}を減らす" onclick="changeQty(${item.id},-1)">−</button><b>${cart[item.id]||0}</b><button aria-label="${esc(item.n)}を増やす" onclick="changeQty(${item.id},1)">+</button></div></article>`).join('')}</div></section>`).join('')}
+ <div class="summary row"><b>${count}点 · ${yen(total)} · ${people}名</b><button class="primary" ${count&&!orderPending?'':'disabled'} onclick="sendOrder()">${orderPending?'送信中…':'注文する'}</button></div>`;
+}
+function changeQty(id,delta){cart[id]=Math.max(0,(cart[id]||0)+delta);riceLarge[id]=Math.min(riceLarge[id]||0,cart[id]);draw()}
+function setOtherPreset(id){const item=MENU.find(entry=>entry.id===Number(id));otherPreset=item?String(item.id):'';otherName=item?item.n:'';otherPrice=item?item.p:100;draw()}
+function setDrinkType(id){otherDrinkType=Number(id)||0;otherDrinkOption='';draw()}
+async function sendOrder(){
+ const items=MENU.filter(item=>cart[item.id]).flatMap(item=>{
+  const large=item.cat==='定食'?Math.min(riceLarge[item.id]||0,cart[item.id]):0,normal=cart[item.id]-large;
+  const drink=drinkTypes.find(option=>option.id===otherDrinkType),price=item.id===15?otherPrice:item.id===16?otherDrinkPrice:item.p;
+  const name=item.id===15?(otherName||item.n):item.id===16?`${drink?drink.n:item.n}${[5,6].includes(otherDrinkType)&&otherDrinkOption?`（${otherDrinkOption}）`:''}`:item.n;
+  const spice=item.id===7&&naanSpice!==''?`（辛さ ${naanSpice}）`:'';
+  return [normal?{n:name+spice,p:price,q:normal}:null,large?{n:name+'（ご飯大）'+spice,p:price+100,q:large}:null].filter(Boolean);
+ });
+ if(!items.length)return;
+ if(!window.firebaseSync){syncMessage='注文システムに接続できません。ページを再読み込みしてください。';draw();return}
+ orderPending=true;syncMessage='';draw();
+ try{
+  await window.firebaseSync.createCustomerOrder({id:Date.now(),table,items,status:'new',paid:false,guestType,adultCount,childCount,allergy,t:Date.now()});
+  cart={};riceLarge={};naanSpice='';otherPreset='';otherName='';otherPrice=100;otherDrinkType=0;otherDrinkOption='';otherDrinkPrice=0;
+ }catch(error){syncMessage='注文を送信できませんでした。通信状態を確認してください。'}
+ orderPending=false;draw();
+}
+window.addEventListener('firebase-sync-ready',()=>window.firebaseSync.startCustomer(remoteOrders=>{orders=remoteOrders;draw()}).catch(()=>{syncMessage='注文システムに接続できません。';draw()}),{once:true});
+window.addEventListener('firebase-menu',event=>{if(Array.isArray(event.detail.menu)){MENU=event.detail.menu;draw()}});
+window.addEventListener('firebase-sync-error',event=>{syncMessage=event.detail?.message||'データベースに接続できません。';draw()});
+const match=location.hash.match(/t=(\d+)/);if(match)table=Math.min(40,Math.max(1,Number(match[1])));draw();
+</script>
+</body>
+</html>

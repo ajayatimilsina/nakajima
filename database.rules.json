@@ -1,0 +1,81 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "orders": {
+      ".read": "auth != null && auth.token.email === 'ajayatimilsina1@gmail.com' && auth.token.firebase.sign_in_provider === 'google.com'",
+      "$orderId": {
+        ".read": "auth != null && ((auth.token.email === 'ajayatimilsina1@gmail.com' && auth.token.firebase.sign_in_provider === 'google.com') || data.child('customerUid').val() === auth.uid)",
+        ".write": "auth != null && ((auth.token.email === 'ajayatimilsina1@gmail.com' && auth.token.firebase.sign_in_provider === 'google.com') || (auth.token.firebase.sign_in_provider === 'anonymous' && !data.exists() && newData.child('customerUid').val() === auth.uid && newData.child('status').val() === 'new' && newData.child('paid').val() === false))",
+        ".validate": "newData.hasChildren(['id', 'table', 'items', 'status', 'paid', 'guestType', 'adultCount', 'childCount', 'allergy', 't', 'customerUid'])",
+        "id": {
+          ".validate": "newData.isNumber()"
+        },
+        "table": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 40"
+        },
+        "items": {
+          ".validate": "newData.hasChildren()",
+          "$itemId": {
+            ".validate": "newData.hasChildren(['n', 'p', 'q'])",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length <= 120"
+            },
+            "p": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
+            },
+            "q": {
+              ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
+            }
+          }
+        },
+        "status": {
+          ".validate": "newData.val() === 'new' || newData.val() === 'preparing' || newData.val() === 'served'"
+        },
+        "paid": {
+          ".validate": "newData.isBoolean()"
+        },
+        "guestType": {
+          ".validate": "newData.val() === 'All' || newData.val() === 'Men' || newData.val() === 'Women'"
+        },
+        "adultCount": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 20"
+        },
+        "childCount": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 20"
+        },
+        "allergy": {
+          ".validate": "newData.val() === 'なし' || newData.val() === 'あり'"
+        },
+        "t": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+        "customerUid": {
+          ".validate": "newData.isString() && (newData.val() === auth.uid || auth.token.email === 'ajayatimilsina1@gmail.com')"
+        }
+      }
+    },
+    "menu": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email === 'ajayatimilsina1@gmail.com' && auth.token.firebase.sign_in_provider === 'google.com'",
+      "$menuId": {
+        ".validate": "newData.hasChildren(['id', 'cat', 'n', 'p', 'e'])",
+        "id": {
+          ".validate": "newData.isNumber()"
+        },
+        "cat": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "n": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "p": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000"
+        },
+        "e": {
+          ".validate": "newData.isString() && newData.val().length <= 16"
+        }
+      }
+    }
+  }
+}
