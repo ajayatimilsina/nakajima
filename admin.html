@@ -66,7 +66,7 @@ function render(){
   <section class="panel"><div class="row"><h2>集計結果</h2><input type="date" value="${day}" onchange="day=this.value;render()"></div>
   <table><tr><th>支払方法</th><th class="n">件数</th><th class="n">金額</th></tr>${Object.entries(sums).map(([key,entry])=>`<tr><td>${esc(METHODS[key]||key)}</td><td class="n">${entry.count}</td><td class="n">${yen(entry.amount)}</td></tr>`).join('')}<tr><th>合計</th><th class="n">${paid.length}</th><th class="n">${yen(grand)}</th></tr></table>
   <div class="row" style="margin-top:8px"><button onclick="printDaily()">集計結果を印刷</button></div></section>
-  <section class="panel"><h2>お会計履歴（${esc(day)}）</h2>${history.length?`<div style="overflow-x:auto"><table><thead><tr><th>会計時刻</th><th>テーブル</th><th>注文内容</th><th>支払方法</th><th class="n">合計</th><th>領収書宛名</th></tr></thead><tbody>${history.map(order=>`<tr><td>${new Date(order.paidAt||order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}</td><td>Table ${order.table}</td><td>${order.items.map(item=>`${esc(item.n)} × ${item.q}`).join('<br>')}</td><td>${esc(METHODS[order.payMethod]||order.payMethod||'不明')}</td><td class="n">${yen(total(order))}</td><td>${esc(order.receiptName||'—')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">この日の会計履歴はありません。</p>'}</section>`;
+  <section class="panel"><h2>お会計履歴（${esc(day)}）</h2>${history.length?`<div style="overflow-x:auto"><table><thead><tr><th>会計時刻</th><th>テーブル</th><th>注文内容</th><th>支払方法</th><th class="n">合計</th><th>領収書宛名</th><th>操作</th></tr></thead><tbody>${history.map(order=>`<tr><td>${new Date(order.paidAt||order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}</td><td>Table ${order.table}</td><td>${order.items.map(item=>`${esc(item.n)} × ${remainingQty(item)}`).join('<br>')}</td><td>${esc(METHODS[order.payMethod]||order.payMethod||'不明')}<br><select id="method-${order.key}">${Object.entries(METHODS).map(([key,label])=>`<option value="${key}" ${order.payMethod===key?'selected':''}>${label}</option>`).join('')}</select> <button onclick="changePaymentMethod('${order.key}')">変更</button></td><td class="n">${yen(total(order))}</td><td>${esc(order.receiptName||'—')}</td><td><button onclick="printPaidReceipt('${order.key}')">レシート印刷</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">この日の会計履歴はありません。</p>'}</section>`;
 }
 async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
 function printHtml(html){
@@ -113,6 +113,21 @@ function receiptBody(t,list){
 function printReceipt(t){
   const list=tableOrders(t),body=receiptBody(t,list);
   enqueue(`<div class="slip"><h3>あじまるや & 中島駅</h3><div>レシート Table ${t}</div><div>${new Date().toLocaleString('ja-JP')}</div><hr>${body.html}</div>`);
+}
+function printPaidReceipt(key){
+  const order=orders.find(entry=>entry.key===key);
+  if(!order)return;
+  const body=receiptBody(order.table,[order]);
+  enqueue(`<div class="slip"><h3>あじまるや & 中島駅</h3><div>レシート Table ${order.table}</div><div>会計 ${new Date(order.paidAt||order.t).toLocaleString('ja-JP')}</div><div>支払方法：${esc(METHODS[order.payMethod]||order.payMethod||'不明')}</div><hr>${body.html}</div>`);
+}
+async function changePaymentMethod(key){
+  const select=document.getElementById(`method-${key}`);
+  const method=select&&select.value;
+  if(!method||!Object.prototype.hasOwnProperty.call(METHODS,method))return;
+  if(!confirm(`支払方法を「${METHODS[method]}」に変更しますか？`))return;
+  try{await firebaseSync.updateOrder(key,{payMethod:method});message='支払方法を変更しました。'}
+  catch(error){message='支払方法を変更できませんでした。Firebaseルールを確認してください。'}
+  render();
 }
 function printInvoice(t){
   const list=tableOrders(t),body=receiptBody(t,list);

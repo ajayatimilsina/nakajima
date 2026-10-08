@@ -39,7 +39,7 @@ function render(){
     <div class="row"><span class="muted">#${order.id} · ${time} · 大人${order.adultCount} 子${order.childCount}</span><b class="timer" data-t="${order.t}" style="font-size:26px"></b></div>
     ${order.allergy==='あり'?'<div class="allergy">⚠ アレルギーあり</div>':''}
     <div style="margin:8px 0">${order.items.map((item,index)=>`<div class="item ${remainingQty(item)===0?'cancelled':''}">${esc(item.n)} × ${item.q}${cancelledQty(item)?`（${cancelledQty(item)}個取消済み）`:''}${remainingQty(item)>0?` <button style="padding:4px 8px;font-size:14px\" onclick=\"cancelItem('${order.key}',${index})\">1個取消</button>`:''}</div>`).join('')}</div>
-    <div class="row">${order.status==='new'?`<button class="primary" onclick="setStatus('${order.key}','preparing')">調理開始</button>`:''}<button onclick="callCustomer('${order.key}')">お客様をカウンターへ呼び出す</button><button class="primary" onclick="setStatus('${order.key}','served')">提供済み</button></div></div>`}).join('')}</div>`:'<p class="muted">調理待ちの注文はありません。</p>'}`;
+    <div class="row">${order.status==='new'?`<button class="primary" onclick="setStatus('${order.key}','preparing')">調理開始</button>`:''}<button onclick="callCustomer('${order.key}')">お客様をカウンターへ呼び出す</button>${order.callCustomerAt?`<button onclick="acknowledgeCall(${order.table})">呼び出し解除</button>`:''}<button class="primary" onclick="setStatus('${order.key}','served')">提供済み</button></div>${order.callCustomerAt?'<p class="allergy">カウンター呼び出し中</p>':''}</div>`}).join('')}</div>`:'<p class="muted">調理待ちの注文はありません。</p>'}`;
 }
 async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
 async function setStatus(key,status){try{await firebaseSync.updateOrder(key,{status});message=''}catch(error){message='更新できませんでした。通信状態を確認してください。'}render()}
@@ -53,6 +53,13 @@ async function cancelItem(key,index){
 async function callCustomer(key){
   try{await firebaseSync.updateOrder(key,{callCustomerAt:Date.now()});message='お客様をカウンターへ呼び出しました。'}
   catch(error){message='呼び出しを送信できませんでした。Firebaseルールを更新したか確認してください。'}
+  render();
+}
+async function acknowledgeCall(table){
+  const pending=orders.filter(order=>order.table===table&&!order.paid&&order.callCustomerAt);
+  if(!pending.length)return;
+  try{await Promise.all(pending.map(order=>firebaseSync.updateOrder(order.key,{callCustomerAt:null})));message='カウンター呼び出しを解除しました。'}
+  catch(error){message='呼び出しを解除できませんでした。通信状態とFirebaseルールを確認してください。'}
   render();
 }
 window.addEventListener('firebase-auth-changed',event=>{isStaff=event.detail.isStaff;staffEmail=event.detail.email||'';connected=false;if(!isStaff){orders=[];knownKeys=null}else setTimeout(()=>{connected=true;render()},3000);render()});
