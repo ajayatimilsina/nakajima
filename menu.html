@@ -16,6 +16,7 @@ button{cursor:pointer}.primary{background:var(--ac);color:#fff;border-color:var(
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}.sold{opacity:.65}
 .tag{display:inline-block;background:#b3261e;color:#fff;border-radius:99px;padding:2px 8px;font-size:12px}
 input.n{width:90px}input.w{width:200px}input.s{width:60px}
+.photo-preview{display:block;width:120px;max-height:100px;object-fit:cover;border-radius:6px}
 </style>
 </head>
 <body>
@@ -145,6 +146,7 @@ function render(){
     <input class="s" value="${esc(item.e)}" placeholder="絵文字" maxlength="4" onchange="edit(${item.id},'e',this.value)">
     ${item.d!==undefined?`<input class="w" value="${esc(item.d)}" placeholder="メニュー説明" onchange="edit(${item.id},'d',this.value)">`:''}
     <button onclick="toggleSold(${item.id})">${item.x?'販売再開':'欠品にする'}</button><button class="danger" onclick="removeItem(${item.id})">削除</button></div>
+    <div class="row">${item.photo?`<img class="photo-preview" src="${esc(item.photo)}" alt="${esc(item.n)}の写真">`:''}<label>料理写真 <input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadPhoto(${item.id},this.files[0])"></label>${item.photo?`<button class="danger" onclick="removePhoto(${item.id})">写真を削除</button>`:''}<span class="muted">JPG・PNG・WebP、5MB以下</span></div>
     <div class="row muted">オプション：${(item.o||[]).map((option,i)=>`<span><input class="w" value="${esc(option.n)}" onchange="editOption(${item.id},${i},'n',this.value)"> +<input class="n" type="number" min="0" step="1" value="${option.p}" onchange="editOption(${item.id},${i},'p',Number(this.value))">円 <button class="danger" onclick="removeOption(${item.id},${i})">×</button></span>`).join('')}<button onclick="addOption(${item.id})">＋ オプション</button></div></div>`).join('')}</section>`).join('')}`;
 }
 async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
@@ -153,6 +155,41 @@ async function save(){
   render();
 }
 function find(id){return menu.find(item=>item.id===id)}
+async function uploadPhoto(id,file){
+  if(!file)return;
+  const item=find(id);if(!item)return;
+  const previous=item.photo;
+  message='料理写真をアップロードしています…';render();
+  let photoUrl='';
+  try{
+    photoUrl=await firebaseSync.uploadMenuPhoto(id,file);
+    item.photo=photoUrl;
+    await firebaseSync.saveMenu(menu);
+  }catch(error){
+    if(photoUrl){
+      item.photo=previous;
+      try{await firebaseSync.deleteMenuPhoto(photoUrl)}
+      catch(cleanupError){message='写真を保存できず、アップロード済み画像の削除にも失敗しました。Firebase Storageを確認してください。';render();return}
+    }
+    message=`写真を保存できませんでした：${error.message||'Firebase Storageの設定と通信を確認してください。'}`;
+    render();return;
+  }
+  if(previous){
+    try{await firebaseSync.deleteMenuPhoto(previous)}
+    catch(error){message='新しい写真は保存しましたが、古い画像を削除できませんでした。Firebase Storageを確認してください。';render();return}
+  }
+  message='料理写真を保存しました。お客様画面に表示されます。';render();
+}
+async function removePhoto(id){
+  const item=find(id);if(!item||!item.photo||!confirm(`「${item.n}」の写真を削除しますか？`))return;
+  const previous=item.photo;
+  delete item.photo;
+  try{await firebaseSync.saveMenu(menu)}
+  catch(error){item.photo=previous;message='写真を削除できませんでした。メニューの保存権限を確認してください。';render();return}
+  try{await firebaseSync.deleteMenuPhoto(previous);message='料理写真を削除しました。'}
+  catch(error){message='お客様画面から写真を外しましたが、Storage上の画像は削除できませんでした。'}
+  render();
+}
 function edit(id,key,value){const item=find(id);if(!item)return;if(key==='memberPrice'){if(String(value).trim()==='')delete item.memberPrice;else item.memberPrice=Math.max(0,Math.round(Number(value))||0)}else{if(key==='p')value=Math.max(0,Math.round(value)||0);if(key==='n'&&!String(value).trim()){render();return}if(key==='cat'&&!String(value).trim()){render();return}item[key]=value}save()}
 function toggleSold(id){const item=find(id);if(!item)return;if(item.x)delete item.x;else item.x=true;save()}
 function removeItem(id){const item=find(id);if(!item||!confirm(`「${item.n}」を削除しますか？`))return;menu=menu.filter(entry=>entry.id!==id);save()}

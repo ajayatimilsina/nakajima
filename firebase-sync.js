@@ -1,6 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
 import { get, getDatabase, onChildAdded, onChildChanged, onChildRemoved, onValue, push, ref, remove, set, update } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+import { deleteObject, getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAk81HxCeRB3IGekGcsE9OVHmi1sFdLwYM',
@@ -18,6 +19,7 @@ const CUSTOMER_ORDER_KEYS = 'hh_customer_order_keys';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const database = getDatabase(app);
+const storage = getStorage(app);
 const ownOrders = new Map();
 const customerListeners = new Set();
 const watchedOrders = new Map();
@@ -46,6 +48,7 @@ function normalizeMenu(menu) {
       e: String(item.e || '')
     };
     if (typeof item.d === 'string' && item.d) record.d = item.d;
+    if (typeof item.photo === 'string' && item.photo.startsWith('https://')) record.photo = item.photo;
     if (Number.isFinite(Number(item.memberPrice))) record.memberPrice = Number(item.memberPrice);
     if (item.x) record.x = true;
     if (options.length) record.o = options;
@@ -130,6 +133,24 @@ async function saveMenu(menu) {
   await set(ref(database, 'menu'), menuRecord(menu));
 }
 
+async function uploadMenuPhoto(menuId, file) {
+  if (!isStaff(auth.currentUser)) throw new Error('Staff sign-in required.');
+  if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    throw new Error('写真はJPG、PNG、WebP形式を選択してください。');
+  }
+  if (file.size > 5 * 1024 * 1024) throw new Error('写真は5MB以下にしてください。');
+  const extension = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1];
+  const photoRef = storageRef(storage, `menu-photos/${menuId}/${Date.now()}.${extension}`);
+  await uploadBytes(photoRef, file, { contentType: file.type });
+  return getDownloadURL(photoRef);
+}
+
+async function deleteMenuPhoto(photoUrl) {
+  if (!isStaff(auth.currentUser)) throw new Error('Staff sign-in required.');
+  if (typeof photoUrl !== 'string' || !photoUrl.startsWith('https://')) throw new Error('Invalid menu photo URL.');
+  await deleteObject(storageRef(storage, photoUrl));
+}
+
 onValue(ref(database, 'menu'), snapshot => {
   emit('firebase-menu', { menu: snapshot.exists() ? normalizeMenu(snapshot.val()) : null });
 }, error => emit('firebase-sync-error', { message: error.message }));
@@ -173,10 +194,12 @@ onAuthStateChanged(auth, user => {
 
 window.firebaseSync = {
   createCustomerOrder,
+  deleteMenuPhoto,
   ensureMenu,
   saveMenu,
   signInStaff,
   signOut: () => signOut(auth),
+  uploadMenuPhoto,
   updateOrder: (key, patch) => update(ref(database, `orders/${key}`), patch),
   deleteOrder: key => remove(ref(database, `orders/${key}`)),
   startCustomer

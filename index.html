@@ -15,6 +15,7 @@ button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.primary{ba
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:5px 0;flex-wrap:wrap}.fields{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .field{display:flex;align-items:center;gap:6px}.muted{color:var(--mut)}.section{margin-top:18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px}
 .item,.panel{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px}.item h3{margin:0 0 5px;font-size:16px}.price{color:var(--mut)}.qty{display:flex;align-items:center;gap:12px;margin-top:10px}.qty button{min-width:40px;font-size:19px}
+.item-photo{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;margin:8px 0}
 .tag{display:inline-block;background:var(--ac);color:white;border-radius:99px;padding:2px 8px;font-size:12px}.preparing{background:#bd7917}.served{background:var(--ok)}
 .summary{position:sticky;bottom:0;margin:14px 0 0;padding:12px;background:var(--card);border:1px solid var(--bd);border-radius:8px;box-shadow:0 -4px 18px #0001}
 label{line-height:1.4}input[type=number]{width:100px}.orders{display:grid;gap:6px}.order{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--bd)}
@@ -171,6 +172,21 @@ function draw(){
  ${menuGroups().map(([category,items])=>`<section class="section" id="${catId(category)}" style="scroll-margin-top:64px"><h2 style="font-size:17px;margin:0 0 8px">${esc(category)}</h2>${items.length?'':'<p class="muted">準備中です。</p>'} <div class="grid">${items.map(item=>`<article class="item"${item.x?' style="opacity:.55"':''}><h3>${esc(item.n)}${item.x?' <span class="tag" style="background:#b3261e">欠品</span>':''}</h3>${item.d?`<div class="price">${esc(item.d)}</div>`:''}${item.id===15?`<label>内容<select onchange="setOtherPreset(this.value)"><option value="">選択してください</option>${MENU.filter(option=>option.cat==='定食').map(option=>`<option value="${option.id}" ${otherPreset==option.id?'selected':''}>${option.id} ${esc(option.n)} ${yen(option.p)}</option>`).join('')}</select></label><label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherPrice}" onchange="otherPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:item.id===16?`<label>内容<select onchange="setDrinkType(this.value)"><option value="0" ${otherDrinkType===0?'selected':''}>選択してください</option>${drinkTypes.map(option=>`<option value="${option.id}" ${otherDrinkType===option.id?'selected':''}>${option.n}</option>`).join('')}</select></label>${[5,6].includes(otherDrinkType)?`<label style="display:block;margin-top:7px">割り方<select onchange="otherDrinkOption=this.value;draw()"><option value="">選択してください</option>${shochuOptions.map(option=>`<option ${otherDrinkOption===option?'selected':''}>${option}</option>`).join('')}</select></label>`:''}<label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherDrinkPrice}" onchange="otherDrinkPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:`<div class="price">${yen(menuPrice(item))}${memberPricing?'（会員価格）':Number.isFinite(Number(item.memberPrice))?'（通常価格）':''}</div>`}${optionControls(item)}${item.id===7?`<label style="display:block;margin-top:7px">辛さ<select onchange="naanSpice=this.value;draw()"><option value="">選択</option>${[0,1,2].map(level=>`<option value="${level}" ${naanSpice==level?'selected':''}>${level}</option>`).join('')}</select></label>`:''}<div class="qty"><button aria-label="${esc(item.n)}を減らす" onclick="changeQty(${item.id},-1)">−</button><b>${cart[item.id]||0}</b><button aria-label="${esc(item.n)}を増やす" onclick="changeQty(${item.id},1)" ${item.x?'disabled':''}>+</button></div></article>`).join('')}</div></section>`).join('')}
  <section class="section panel"><label><input type="checkbox" ${receiptNeeded?'checked':''} onchange="receiptNeeded=this.checked;draw()"> 領収書が必要です</label>${receiptNeeded?`<label class="field" style="margin-top:8px">宛名<input id="receiptName" type="text" maxlength="60" value="${esc(receiptName)}" placeholder="お名前・会社名" oninput="receiptName=this.value" style="flex:1"></label>`:''}</section>
  <div class="summary row"><b>${count}点 · ${yen(total)} · ${people}名</b><button class="primary" ${count&&!orderPending?'':'disabled'} onclick="sendOrder()">${orderPending?'送信中…':'注文する'}</button></div>`;
+ menuGroups().forEach(([category,items])=>{
+  const section=document.getElementById(catId(category));
+  if(!section)return;
+  const cards=section.querySelectorAll('article.item');
+  items.forEach((item,index)=>{
+   if(!item.photo)return;
+   const image=document.createElement('img');
+   image.className='item-photo';
+   image.src=item.photo;
+   image.alt=`${item.n}の写真`;
+   image.loading='lazy';
+   image.onerror=()=>image.remove();
+   cards[index]?.querySelector('h3')?.after(image);
+  });
+ });
  if(focusedName>=0){const input=document.getElementById('receiptName');if(input){input.focus();input.setSelectionRange(focusedName,focusedName)}}
 }
 function changeQty(id,delta){
