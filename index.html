@@ -48,6 +48,7 @@ const optionsUsed=item=>itemOptions(item).reduce((sum,option,i)=>sum+(optQty[ite
 const optionsTotal=item=>itemOptions(item).reduce((sum,option,i)=>sum+option.p*(optQty[item.id+':'+i]||0),0);
 const optionControls=item=>itemOptions(item).map((option,i)=>{const key=item.id+':'+i,current=optQty[key]||0,max=(cart[item.id]||0)-optionsUsed(item)+current;return `<label style="display:block;margin-top:7px">${esc(option.n)}<select onchange="optQty['${key}']=Number(this.value);draw()"><option value="0">なし</option>${Array.from({length:max},(_,k)=>k+1).map(q=>`<option value="${q}" ${current===q?'selected':''}>${q}個</option>`).join('')}</select> +${yen(option.p)} / 個</label>`}).join('');
 let orders=[],table=1,cart={},optQty={},receiptNeeded=false,receiptName='',naanSpice='',otherPreset='',otherName='',otherPrice=100,otherDrinkType=0,otherDrinkOption='',otherDrinkPrice=0,guestType='All',adultCount=2,childCount=0,allergy='なし',orderPending=false,syncMessage='';
+const announcedCalls=new Map();
 const PAY_LINKS={paypay:'',paypal:''};
 function paymentPanel(list){
  const sum=list.reduce((s,order)=>s+order.items.reduce((t,item)=>t+item.p*remainingQty(item),0),0);
@@ -61,10 +62,12 @@ function draw(){
  const total=MENU.reduce((sum,item)=>sum+(item.id===15?otherPrice:item.id===16?otherDrinkPrice:item.p)*(cart[item.id]||0)+optionsTotal(item),0);
  const focusedName=document.activeElement&&document.activeElement.id==='receiptName'?document.activeElement.selectionStart:-1;
  const mine=orders.filter(order=>order.table===table&&!order.paid);
+ const counterCalls=mine.filter(order=>order.callCustomerAt);
  document.getElementById('app').innerHTML=`
  <nav class="catnav">${menuGroups().map(([category])=>`<button type="button" onclick="goCat(this.dataset.c)" data-c="${esc(category)}">${esc(category)}</button>`).join('')}</nav>
  <div class="row"><div class="fields"><h1 style="font-size:24px;margin:0">Table ${table}</h1></div></div>
  <div class="panel fields" style="margin-top:10px"><label class="field">大人<select onchange="adultCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${adultCount===i+1?'selected':''}>${i+1}</option>`).join('')}</select></label><label class="field">子ども<select onchange="childCount=Number(this.value);draw()">${Array.from({length:10},(_,i)=>`<option value="${i}" ${childCount===i?'selected':''}>${i}</option>`).join('')}</select></label><label class="field">性別<select onchange="guestType=this.value;draw()">${['All','Men','Women'].map(value=>`<option ${guestType===value?'selected':''}>${value}</option>`).join('')}</select></label><label class="field">アレルギー<select onchange="allergy=this.value;draw()"><option ${allergy==='なし'?'selected':''}>なし</option><option ${allergy==='あり'?'selected':''}>あり</option></select></label><span class="muted">合計 ${people}名</span></div>
+ ${counterCalls.length?`<section role="alert" class="section panel" style="background:#fff3cd;color:#6b4e00;border:2px solid #e0a030"><b>カウンターへお越しください</b>${counterCalls.map(order=>`<div>スタッフからの呼び出し（注文 #${order.id}） <button type="button" onclick="speakCounterCall(${order.table})">音声でもう一度聞く</button></div>`).join('')}</section>`:''}
  ${syncMessage?`<p role="alert" class="muted">${esc(syncMessage)}</p>`:''}
  ${mine.length?`<section class="section panel"><b>注文履歴</b><div class="orders">${mine.map(order=>`<div class="order"><div><b>注文 #${order.id}</b><div class="muted">${order.items.map(item=>`${esc(item.n)} × ${remainingQty(item)}${cancelledQty(item)?`（${cancelledQty(item)}個取消済み）`:''}`).join(', ')}</div><div class="muted">${new Date(order.t).toLocaleTimeString()} · ${yen(order.items.reduce((sum,item)=>sum+item.p*remainingQty(item),0))}</div>${order.callCustomerAt?'<div role="alert" style="margin-top:6px;padding:8px;background:#fff3cd;color:#6b4e00;border-radius:6px;font-weight:bold">お客様をカウンターへお越しください</div>':''}</div><span class="tag ${order.status==='preparing'?'preparing':order.status==='served'?'served':''}">${order.status==='new'?'受付済み':order.status==='preparing'?'調理中':'提供済み'}</span>${order.status!=='served'?`<div class="muted" style="text-align:right;margin-top:4px">お届けまで <b class="timer" data-t="${order.t}"></b></div>`:''}</div>`).join('')}</div></section>`:''}
  ${mine.length?paymentPanel(mine):''}
@@ -104,7 +107,23 @@ async function sendOrder(){
  }catch(error){syncMessage='注文を送信できませんでした。通信状態を確認してください。'}
  orderPending=false;draw();
 }
-window.addEventListener('firebase-sync-ready',()=>window.firebaseSync.startCustomer(remoteOrders=>{orders=remoteOrders;draw()}).catch(()=>{syncMessage='注文システムに接続できません。';draw()}),{once:true});
+function speakCounterCall(callTable){
+ if(!('speechSynthesis' in window)){syncMessage='この端末は音声読み上げに対応していません。画面の案内をご確認ください。';draw();return}
+ const utterance=new SpeechSynthesisUtterance(`テーブル${callTable}のお客様、カウンターまでお越しください。`);
+ utterance.lang='ja-JP';
+ const japaneseVoice=speechSynthesis.getVoices().find(voice=>voice.lang.toLowerCase().startsWith('ja'));
+ if(japaneseVoice)utterance.voice=japaneseVoice;
+ speechSynthesis.cancel();
+ speechSynthesis.speak(utterance);
+}
+window.addEventListener('firebase-sync-ready',()=>window.firebaseSync.startCustomer(remoteOrders=>{
+ const calls=remoteOrders.filter(order=>order.table===table&&!order.paid&&order.callCustomerAt);
+ calls.forEach(order=>{
+  const previous=announcedCalls.get(order.key)||0;
+  if(order.callCustomerAt>previous){announcedCalls.set(order.key,order.callCustomerAt);speakCounterCall(order.table)}
+ });
+ orders=remoteOrders;draw()
+}).catch(()=>{syncMessage='注文システムに接続できません。';draw()}),{once:true});
 window.addEventListener('firebase-menu',event=>{if(Array.isArray(event.detail.menu)){MENU=event.detail.menu;MENU.filter(item=>item.x&&cart[item.id]).forEach(item=>{cart[item.id]=0;itemOptions(item).forEach((option,i)=>{optQty[item.id+':'+i]=0})});draw()}});
 window.addEventListener('firebase-sync-error',event=>{syncMessage=event.detail?.message||'データベースに接続できません。';draw()});
 function tick(){
