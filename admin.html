@@ -48,6 +48,7 @@ function render(){
   if(!isStaff){app.innerHTML=`<div class="panel"><p>スタッフ用Googleアカウントでログインしてください。</p><button class="primary" onclick="login()">Googleでログイン</button>${message?`<p role="alert">${esc(message)}</p>`:''}</div>`;return}
   const open=orders.filter(order=>!order.paid),tables=[...new Set(open.map(order=>order.table))].sort((a,b)=>a-b);
   const paid=orders.filter(order=>order.paid&&dayKey(order.paidAt||order.t)===day);
+  const history=[...paid].sort((a,b)=>(b.paidAt||b.t)-(a.paidAt||a.t));
   const sums=Object.fromEntries(Object.keys(METHODS).map(key=>[key,{count:0,amount:0}]));
   paid.forEach(order=>{const entry=sums[order.payMethod]||(sums[order.payMethod]={count:0,amount:0});entry.count++;entry.amount+=total(order)});
   const grand=Object.values(sums).reduce((sum,entry)=>sum+entry.amount,0);
@@ -61,7 +62,8 @@ function render(){
     <div class="row" style="margin-top:8px">${Object.entries(METHODS).map(([key,label])=>`<button class="primary" onclick="pay(${t},'${key}')">${label}で会計</button>`).join('')}</div></div>`}).join('')}</div>`:'<p class="muted">未会計の注文はありません。</p>'}</section>
   <section class="panel"><div class="row"><h2>集計結果</h2><input type="date" value="${day}" onchange="day=this.value;render()"></div>
   <table><tr><th>支払方法</th><th class="n">件数</th><th class="n">金額</th></tr>${Object.entries(sums).map(([key,entry])=>`<tr><td>${esc(METHODS[key]||key)}</td><td class="n">${entry.count}</td><td class="n">${yen(entry.amount)}</td></tr>`).join('')}<tr><th>合計</th><th class="n">${paid.length}</th><th class="n">${yen(grand)}</th></tr></table>
-  <div class="row" style="margin-top:8px"><button onclick="printDaily()">集計結果を印刷</button></div></section>`;
+  <div class="row" style="margin-top:8px"><button onclick="printDaily()">集計結果を印刷</button></div></section>
+  <section class="panel"><h2>お会計履歴（${esc(day)}）</h2>${history.length?`<div style="overflow-x:auto"><table><thead><tr><th>会計時刻</th><th>テーブル</th><th>注文内容</th><th>支払方法</th><th class="n">合計</th><th>領収書宛名</th></tr></thead><tbody>${history.map(order=>`<tr><td>${new Date(order.paidAt||order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})}</td><td>Table ${order.table}</td><td>${order.items.map(item=>`${esc(item.n)} × ${item.q}`).join('<br>')}</td><td>${esc(METHODS[order.payMethod]||order.payMethod||'不明')}</td><td class="n">${yen(total(order))}</td><td>${esc(order.receiptName||'—')}</td></tr>`).join('')}</tbody></table></div>`:'<p class="muted">この日の会計履歴はありません。</p>'}</section>`;
 }
 async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
 function printHtml(html){
