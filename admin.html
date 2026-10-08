@@ -37,7 +37,9 @@ h2{font-size:17px;margin:0 0 8px}table{border-collapse:collapse;width:100%}td,th
 const yen=n=>'¥'+Math.round(n).toLocaleString();
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const METHODS={cash:'現金',credit:'クレジット',paypay:'PayPay',paypal:'PayPal'};
-const total=order=>order.items.reduce((sum,item)=>sum+item.p*item.q,0);
+const cancelledQty=item=>Math.min(item.q,item.cancelled?item.q:Number(item.cancelledQty)||0);
+const remainingQty=item=>Math.max(0,item.q-cancelledQty(item));
+const total=order=>order.items.reduce((sum,item)=>sum+item.p*remainingQty(item),0);
 const dayKey=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 let orders=[],isStaff=false,day=dayKey(Date.now()),message='';
 const printQueue=[];let printing=false;
@@ -56,8 +58,9 @@ function render(){
   <section class="panel"><h2>厨房（1品ずつ印刷）</h2><div class="row"><span class="muted">未印刷の注文：${orders.filter(o=>o.status==='new'&&!o.kitchenPrinted).length}件</span><button onclick="printPendingKitchen()">未印刷を今すぐ印刷</button></div></section>
   <section class="panel"><h2>お会計（未会計テーブル）</h2>${tables.length?`<div class="grid">${tables.map(t=>{const list=open.filter(order=>order.table===t),sum=list.reduce((s,order)=>s+total(order),0),names=[...new Set(list.map(order=>order.receiptName).filter(Boolean))];
     return `<div class="panel" style="margin:0"><div class="row"><b>Table ${t}</b><b>${yen(sum)}</b></div>
-    <table>${list.flatMap(order=>order.items.map(item=>`<tr><td>${esc(item.n)}</td><td class="n">×${item.q}</td><td class="n">${yen(item.p*item.q)}</td></tr>`)).join('')}</table>
+    <table>${list.flatMap(order=>order.items.map((item,index)=>`<tr${remainingQty(item)===0?' style="text-decoration:line-through;opacity:.55"':''}><td>${esc(item.n)}${cancelledQty(item)?`（${cancelledQty(item)}個取消済み）`:''}</td><td class="n">×${remainingQty(item)} / ${item.q}</td><td class="n">${yen(item.p*remainingQty(item))}</td>${remainingQty(item)>0?`<td><button onclick="cancelItem('${order.key}',${index})">1個取消</button></td>`:''}</tr>`)).join('')}</table>
     ${names.length?`<p class="muted">領収書宛名：${esc(names.join(' / '))}</p>`:''}
+    <div class="row"><button onclick="callCustomer(${t})">お客様をカウンターへ呼び出す</button></div>
     <div class="row" style="margin-top:8px"><button onclick="printReceipt(${t})">レシート</button><button onclick="printInvoice(${t})">領収書</button></div>
     <div class="row" style="margin-top:8px">${Object.entries(METHODS).map(([key,label])=>`<button class="primary" onclick="pay(${t},'${key}')">${label}で会計</button>`).join('')}</div></div>`}).join('')}</div>`:'<p class="muted">未会計の注文はありません。</p>'}</section>
   <section class="panel"><div class="row"><h2>集計結果</h2><input type="date" value="${day}" onchange="day=this.value;render()"></div>
@@ -88,9 +91,23 @@ async function printKitchen(order){
 }
 function printPendingKitchen(){orders.filter(order=>order.status==='new'&&!order.kitchenPrinted).forEach(printKitchen)}
 function tableOrders(t){return orders.filter(order=>!order.paid&&order.table===t)}
+async function cancelItem(key,index){
+  const order=orders.find(entry=>entry.key===key),item=order&&order.items[index];
+  if(!item||remainingQty(item)<1||!confirm(`「${item.n}」を1個取消しますか？`))return;
+  try{await firebaseSync.updateOrder(key,{[`items/${index}/cancelledQty`]:cancelledQty(item)+1});message=''}
+  catch(error){message='取消を保存できませんでした。Firebaseルールを更新したか確認してください。'}
+  render();
+}
+async function callCustomer(table){
+  const list=tableOrders(table);
+  if(!list.length)return;
+  try{await Promise.all(list.map(order=>firebaseSync.updateOrder(order.key,{callCustomerAt:Date.now()})));message='お客様をカウンターへ呼び出しました。'}
+  catch(error){message='呼び出しを送信できませんでした。Firebaseルールを更新したか確認してください。'}
+  render();
+}
 function receiptBody(t,list){
   const sum=list.reduce((s,order)=>s+total(order),0);
-  const rows=list.flatMap(order=>order.items).map(item=>`<tr><td>${esc(item.n)}</td><td style="text-align:right">×${item.q}</td><td style="text-align:right">${yen(item.p*item.q)}</td></tr>`).join('');
+  const rows=list.flatMap(order=>order.items.filter(item=>remainingQty(item)>0)).map(item=>`<tr><td>${esc(item.n)}</td><td style="text-align:right">×${remainingQty(item)}</td><td style="text-align:right">${yen(item.p*remainingQty(item))}</td></tr>`).join('');
   return {sum,html:`<table style="width:100%">${rows}</table><hr><div class="big" style="display:flex;justify-content:space-between"><span>合計</span><span>${yen(sum)}</span></div>`};
 }
 function printReceipt(t){

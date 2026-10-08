@@ -26,6 +26,9 @@
             },
             "q": {
               ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100"
+            },
+            "cancelledQty": {
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= root.child('orders').child($orderId).child('items').child($itemId).child('q').val() && auth.token.email === 'ajayatimilsina1@gmail.com'"
             }
           }
         },
@@ -64,6 +67,12 @@
         },
         "paidAt": {
           ".validate": "newData.isNumber() && auth.token.email === 'ajayatimilsina1@gmail.com'"
+        },
+        "callCustomerAt": {
+          ".validate": "newData.isNumber() && auth.token.email === 'ajayatimilsina1@gmail.com'"
+        },
+        "cancelled": {
+          ".validate": "newData.isBoolean() && auth.token.email === 'ajayatimilsina1@gmail.com'"
         }
       }
     },
