@@ -30,7 +30,7 @@ label{line-height:1.4}input[type=number]{width:100px}.orders{display:grid;gap:6p
 <script>
 let MENU=[
  {id:1,cat:'定食',n:'唐揚げ定食',p:800,e:''},{id:2,cat:'定食',n:'あじまる唐揚げ定食',p:900,e:''},{id:3,cat:'定食',n:'とんかつ定食',p:880,e:''},{id:4,cat:'定食',n:'みそとんかつ定食',p:900,e:''},{id:5,cat:'定食',n:'アジフライ定食',p:850,e:''},{id:6,cat:'定食',n:'ミックスフライ定食',p:920,e:''},
- {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:''},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
+ {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:'',o:[{n:'チーズナンに変更',p:330},{n:'ガーリックナンに変更',p:110},{n:'ごまナンに変更',p:110},{n:'チョコナンに変更',p:220},{n:'ハニーナンに変更',p:110},{n:'ハニーチーズナンに変更',p:440}]},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
  {id:14,cat:'ドリンク',n:'生ビール',p:550,memberPrice:500,e:'🍺',o:[{n:'男前（大）ジョッキ',p:150}]},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'},
 ];
 const DEFAULT_DRINKS=[
@@ -74,13 +74,28 @@ const DEFAULT_DRINKS=[
 ];
 const DEFAULT_EXTRA_MENU=[
  {id:80,cat:'ナンセット',n:'チーズナンセット',p:1045,e:'🧀'},
- {id:81,cat:'ナンセット',n:'バターチキンセット',p:990,e:'🍛'},
- {id:82,cat:'ナンセット',n:'ほうれん草セット',p:990,e:'🍛'},
- {id:83,cat:'サブメニュー',n:'サントリー生ビールとチキンティッカ（2個）',p:800,e:'🍺'}
+ {id:81,cat:'ナンセット',n:'バターチキンセット',p:990,e:'🍛',o:[{n:'チーズナンに変更',p:330},{n:'ガーリックナンに変更',p:110},{n:'ごまナンに変更',p:110},{n:'チョコナンに変更',p:220},{n:'ハニーナンに変更',p:110},{n:'ハニーチーズナンに変更',p:440}]},
+ {id:82,cat:'ナンセット',n:'ほうれん草セット',p:990,e:'🍛',o:[{n:'チーズナンに変更',p:330},{n:'ガーリックナンに変更',p:110},{n:'ごまナンに変更',p:110},{n:'チョコナンに変更',p:220},{n:'ハニーナンに変更',p:110},{n:'ハニーチーズナンに変更',p:440}]},
+ {id:83,cat:'サブメニュー',n:'サントリー生ビールとチキンティッカ（2個）',p:800,e:'🍺'},
+ {id:84,cat:'ナン単品',n:'プレーンナン',p:300,e:'🫓'},
+ {id:85,cat:'ナン単品',n:'チーズナン',p:660,e:'🧀'},
+ {id:86,cat:'ナン単品',n:'ガーリックナン',p:440,e:'🫓'},
+ {id:87,cat:'ナン単品',n:'ごまナン',p:440,e:'🫓'},
+ {id:88,cat:'ナン単品',n:'チョコナン',p:550,e:'🍫'},
+ {id:89,cat:'ナン単品',n:'ハニーナン',p:440,e:'🍯'},
+ {id:90,cat:'ナン単品',n:'ハニーチーズナン',p:770,e:'🧀'},
+ {id:91,cat:'ナンセット',n:'味まる屋スペシャルセット',p:1980,e:'🍛',d:'カレー・キャベツサラダ・プレーンナンとチョコミニナン・味噌汁・タンドリーチキン・ラッシー'},
+ {id:92,cat:'サブメニュー',n:'チキンティッカ 2個',p:330,e:'🍗'},
+ {id:93,cat:'サブメニュー',n:'チキンティッカ 5個',p:660,e:'🍗'},
+ {id:94,cat:'サブメニュー',n:'チキンチリ',p:990,e:'🍗'},
+ {id:95,cat:'サブメニュー',n:'タンドリーチキン',p:450,e:'🍗'},
+ {id:96,cat:'サブメニュー',n:'タンドリーチキン',p:800,e:'🍗'},
+ {id:97,cat:'ドリンク',n:'ラッシー',p:330,e:'🥛'},
+ {id:98,cat:'ドリンク',n:'マンゴーラッシー',p:440,e:'🥭'}
 ];
 const drinkTypes=[{id:1,n:'生'},{id:2,n:'ハイボール'},{id:3,n:'レモンサワー'},{id:4,n:'お茶'},{id:5,n:'麦焼酎'},{id:6,n:'芋焼酎'}];
 const shochuOptions=['水割り','お湯割り','お茶割り','ソーダ割り'];
-const FIXED_CATS=['定食','ナンセット','サブメニュー','ドリンク','飲み放題ドリンク','ラーメン'];
+const FIXED_CATS=['定食','ナンセット','ナン単品','サブメニュー','ドリンク','飲み放題ドリンク','ラーメン'];
 const menuGroups=()=>[...new Set([...FIXED_CATS,...MENU.map(item=>item.cat)])].filter(category=>FIXED_CATS.includes(category)||MENU.some(item=>item.cat===category)).map(category=>[category,MENU.filter(item=>item.cat===category)]);
 const catId=category=>'cat-'+Math.max(0,[...new Set([...FIXED_CATS,...MENU.map(item=>item.cat)])].indexOf(category));
 function goCat(category){const el=document.getElementById(catId(category));if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
@@ -117,7 +132,7 @@ function draw(){
  ${syncMessage?`<p role="alert" class="muted">${esc(syncMessage)}</p>`:''}
  ${mine.length?`<section class="section panel"><b>注文履歴</b><div class="orders">${mine.map(order=>`<div class="order"><div><b>注文 #${order.id}</b><div class="muted">${order.items.map(item=>`${esc(item.n)} × ${remainingQty(item)}${cancelledQty(item)?`（${cancelledQty(item)}個取消済み）`:''}`).join(', ')}</div><div class="muted">${new Date(order.t).toLocaleTimeString()} · ${yen(order.items.reduce((sum,item)=>sum+item.p*remainingQty(item),0))}</div>${order.callCustomerAt?'<div role="alert" style="margin-top:6px;padding:8px;background:#fff3cd;color:#6b4e00;border-radius:6px;font-weight:bold">お客様をカウンターへお越しください</div>':''}</div><span class="tag ${order.status==='preparing'?'preparing':order.status==='served'?'served':''}">${order.status==='new'?'受付済み':order.status==='preparing'?'調理中':'提供済み'}</span>${order.status!=='served'?`<div class="muted" style="text-align:right;margin-top:4px">お届けまで <b class="timer" data-t="${order.t}"></b></div>`:''}</div>`).join('')}</div></section>`:''}
  ${mine.length?paymentPanel(mine):''}
- ${menuGroups().map(([category,items])=>`<section class="section" id="${catId(category)}" style="scroll-margin-top:64px"><h2 style="font-size:17px;margin:0 0 8px">${esc(category)}</h2>${items.length?'':'<p class="muted">準備中です。</p>'}<div class="grid">${items.map(item=>`<article class="item"${item.x?' style="opacity:.55"':''}><h3>${esc(item.n)}${item.x?' <span class="tag" style="background:#b3261e">欠品</span>':''}</h3>${item.id===15?`<label>内容<select onchange="setOtherPreset(this.value)"><option value="">選択してください</option>${MENU.filter(option=>option.cat==='定食').map(option=>`<option value="${option.id}" ${otherPreset==option.id?'selected':''}>${option.id} ${esc(option.n)} ${yen(option.p)}</option>`).join('')}</select></label><label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherPrice}" onchange="otherPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:item.id===16?`<label>内容<select onchange="setDrinkType(this.value)"><option value="0" ${otherDrinkType===0?'selected':''}>選択してください</option>${drinkTypes.map(option=>`<option value="${option.id}" ${otherDrinkType===option.id?'selected':''}>${option.n}</option>`).join('')}</select></label>${[5,6].includes(otherDrinkType)?`<label style="display:block;margin-top:7px">割り方<select onchange="otherDrinkOption=this.value;draw()"><option value="">選択してください</option>${shochuOptions.map(option=>`<option ${otherDrinkOption===option?'selected':''}>${option}</option>`).join('')}</select></label>`:''}<label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherDrinkPrice}" onchange="otherDrinkPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:`<div class="price">${yen(menuPrice(item))}${memberPricing?'（会員価格）':Number.isFinite(Number(item.memberPrice))?'（通常価格）':''}</div>`}${optionControls(item)}${item.id===7?`<label style="display:block;margin-top:7px">辛さ<select onchange="naanSpice=this.value;draw()"><option value="">選択</option>${[0,1,2].map(level=>`<option value="${level}" ${naanSpice==level?'selected':''}>${level}</option>`).join('')}</select></label>`:''}<div class="qty"><button aria-label="${esc(item.n)}を減らす" onclick="changeQty(${item.id},-1)">−</button><b>${cart[item.id]||0}</b><button aria-label="${esc(item.n)}を増やす" onclick="changeQty(${item.id},1)" ${item.x?'disabled':''}>+</button></div></article>`).join('')}</div></section>`).join('')}
+ ${menuGroups().map(([category,items])=>`<section class="section" id="${catId(category)}" style="scroll-margin-top:64px"><h2 style="font-size:17px;margin:0 0 8px">${esc(category)}</h2>${items.length?'':'<p class="muted">準備中です。</p>'} <div class="grid">${items.map(item=>`<article class="item"${item.x?' style="opacity:.55"':''}><h3>${esc(item.n)}${item.x?' <span class="tag" style="background:#b3261e">欠品</span>':''}</h3>${item.d?`<div class="price">${esc(item.d)}</div>`:''}${item.id===15?`<label>内容<select onchange="setOtherPreset(this.value)"><option value="">選択してください</option>${MENU.filter(option=>option.cat==='定食').map(option=>`<option value="${option.id}" ${otherPreset==option.id?'selected':''}>${option.id} ${esc(option.n)} ${yen(option.p)}</option>`).join('')}</select></label><label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherPrice}" onchange="otherPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:item.id===16?`<label>内容<select onchange="setDrinkType(this.value)"><option value="0" ${otherDrinkType===0?'selected':''}>選択してください</option>${drinkTypes.map(option=>`<option value="${option.id}" ${otherDrinkType===option.id?'selected':''}>${option.n}</option>`).join('')}</select></label>${[5,6].includes(otherDrinkType)?`<label style="display:block;margin-top:7px">割り方<select onchange="otherDrinkOption=this.value;draw()"><option value="">選択してください</option>${shochuOptions.map(option=>`<option ${otherDrinkOption===option?'selected':''}>${option}</option>`).join('')}</select></label>`:''}<label style="display:block;margin-top:7px">料金（円）<input type="number" min="0" step="1" value="${otherDrinkPrice}" onchange="otherDrinkPrice=Math.max(0,Math.round(Number(this.value)||0));draw()"></label>`:`<div class="price">${yen(menuPrice(item))}${memberPricing?'（会員価格）':Number.isFinite(Number(item.memberPrice))?'（通常価格）':''}</div>`}${optionControls(item)}${item.id===7?`<label style="display:block;margin-top:7px">辛さ<select onchange="naanSpice=this.value;draw()"><option value="">選択</option>${[0,1,2].map(level=>`<option value="${level}" ${naanSpice==level?'selected':''}>${level}</option>`).join('')}</select></label>`:''}<div class="qty"><button aria-label="${esc(item.n)}を減らす" onclick="changeQty(${item.id},-1)">−</button><b>${cart[item.id]||0}</b><button aria-label="${esc(item.n)}を増やす" onclick="changeQty(${item.id},1)" ${item.x?'disabled':''}>+</button></div></article>`).join('')}</div></section>`).join('')}
  <section class="section panel"><label><input type="checkbox" ${receiptNeeded?'checked':''} onchange="receiptNeeded=this.checked;draw()"> 領収書が必要です</label>${receiptNeeded?`<label class="field" style="margin-top:8px">宛名<input id="receiptName" type="text" maxlength="60" value="${esc(receiptName)}" placeholder="お名前・会社名" oninput="receiptName=this.value" style="flex:1"></label>`:''}</section>
  <div class="summary row"><b>${count}点 · ${yen(total)} · ${people}名</b><button class="primary" ${count&&!orderPending?'':'disabled'} onclick="sendOrder()">${orderPending?'送信中…':'注文する'}</button></div>`;
  if(focusedName>=0){const input=document.getElementById('receiptName');if(input){input.focus();input.setSelectionRange(focusedName,focusedName)}}
@@ -173,8 +188,15 @@ window.addEventListener('firebase-sync-ready',()=>window.firebaseSync.startCusto
 window.addEventListener('firebase-menu',event=>{
  if(Array.isArray(event.detail.menu)){
   const remote=event.detail.menu;
+  const defaults=[...MENU,...DEFAULT_DRINKS,...DEFAULT_EXTRA_MENU];
   const remoteIds=new Set(remote.map(item=>item.id));
-  MENU=[...remote,...[...DEFAULT_DRINKS,...DEFAULT_EXTRA_MENU].filter(item=>!remoteIds.has(item.id))];
+  MENU=[...remote.map(item=>{
+   const fallback=defaults.find(entry=>entry.id===item.id);
+   if(!fallback)return item;
+   const existingOptions=item.o||[];
+   const mergedOptions=fallback.o?[...existingOptions,...fallback.o.filter(option=>!existingOptions.some(current=>current.n===option.n))]:existingOptions;
+   return {...item,...(mergedOptions.length?{o:mergedOptions}:{}),...(!item.d&&fallback.d?{d:fallback.d}:{})};
+  }),...[...DEFAULT_DRINKS,...DEFAULT_EXTRA_MENU].filter(item=>!remoteIds.has(item.id))];
   MENU.filter(item=>item.x&&cart[item.id]).forEach(item=>{cart[item.id]=0;itemOptions(item).forEach((option,i)=>{optQty[item.id+':'+i]=0})});
   draw();
  }

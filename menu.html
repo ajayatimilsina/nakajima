@@ -64,13 +64,29 @@ const DRINK_MENU=[
 ];
 const EXTRA_MENU=[
  {id:80,cat:'ナンセット',n:'チーズナンセット',p:1045,e:'🧀'},
- {id:81,cat:'ナンセット',n:'バターチキンセット',p:990,e:'🍛'},
- {id:82,cat:'ナンセット',n:'ほうれん草セット',p:990,e:'🍛'},
- {id:83,cat:'サブメニュー',n:'サントリー生ビールとチキンティッカ（2個）',p:800,e:'🍺'}
+ {id:81,cat:'ナンセット',n:'バターチキンセット',p:990,e:'🍛',o:[{n:'チーズナンに変更',p:330},{n:'ガーリックナンに変更',p:110},{n:'ごまナンに変更',p:110},{n:'チョコナンに変更',p:220},{n:'ハニーナンに変更',p:110},{n:'ハニーチーズナンに変更',p:440}]},
+ {id:82,cat:'ナンセット',n:'ほうれん草セット',p:990,e:'🍛',o:[{n:'チーズナンに変更',p:330},{n:'ガーリックナンに変更',p:110},{n:'ごまナンに変更',p:110},{n:'チョコナンに変更',p:220},{n:'ハニーナンに変更',p:110},{n:'ハニーチーズナンに変更',p:440}]},
+ {id:83,cat:'サブメニュー',n:'サントリー生ビールとチキンティッカ（2個）',p:800,e:'🍺'},
+ {id:84,cat:'ナン単品',n:'プレーンナン',p:300,e:'🫓'},
+ {id:85,cat:'ナン単品',n:'チーズナン',p:660,e:'🧀'},
+ {id:86,cat:'ナン単品',n:'ガーリックナン',p:440,e:'🫓'},
+ {id:87,cat:'ナン単品',n:'ごまナン',p:440,e:'🫓'},
+ {id:88,cat:'ナン単品',n:'チョコナン',p:550,e:'🍫'},
+ {id:89,cat:'ナン単品',n:'ハニーナン',p:440,e:'🍯'},
+ {id:90,cat:'ナン単品',n:'ハニーチーズナン',p:770,e:'🧀'},
+ {id:91,cat:'ナンセット',n:'味まる屋スペシャルセット',p:1980,e:'🍛',d:'カレー・キャベツサラダ・プレーンナンとチョコミニナン・味噌汁・タンドリーチキン・ラッシー'},
+ {id:92,cat:'サブメニュー',n:'チキンティッカ 2個',p:330,e:'🍗'},
+ {id:93,cat:'サブメニュー',n:'チキンティッカ 5個',p:660,e:'🍗'},
+ {id:94,cat:'サブメニュー',n:'チキンチリ',p:990,e:'🍗'},
+ {id:95,cat:'サブメニュー',n:'タンドリーチキン',p:450,e:'🍗'},
+ {id:96,cat:'サブメニュー',n:'タンドリーチキン',p:800,e:'🍗'},
+ {id:97,cat:'ドリンク',n:'ラッシー',p:330,e:'🥛'},
+ {id:98,cat:'ドリンク',n:'マンゴーラッシー',p:440,e:'🥭'}
 ];
+const NAAN_CHANGE_OPTIONS=[{n:'チーズナンに変更',p:330},{n:'ガーリックナンに変更',p:110},{n:'ごまナンに変更',p:110},{n:'チョコナンに変更',p:220},{n:'ハニーナンに変更',p:110},{n:'ハニーチーズナンに変更',p:440}];
 const DEFAULT_MENU=[
  {id:1,cat:'定食',n:'唐揚げ定食',p:800,e:''},{id:2,cat:'定食',n:'あじまる唐揚げ定食',p:900,e:''},{id:3,cat:'定食',n:'とんかつ定食',p:880,e:''},{id:4,cat:'定食',n:'みそとんかつ定食',p:900,e:''},{id:5,cat:'定食',n:'アジフライ定食',p:850,e:''},{id:6,cat:'定食',n:'ミックスフライ定食',p:920,e:''},
- {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:''},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
+ {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:'',o:NAAN_CHANGE_OPTIONS},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
  {id:14,cat:'ドリンク',n:'生ビール',p:550,memberPrice:500,e:'🍺',o:[{n:'男前（大）ジョッキ',p:150}]},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'},
  ...DRINK_MENU,
  ...EXTRA_MENU
@@ -91,6 +107,7 @@ function render(){
     ${Number.isFinite(Number(item.memberPrice))?`会員 <input class="n" type="number" min="0" step="1" value="${item.memberPrice}" aria-label="会員価格" onchange="edit(${item.id},'memberPrice',this.value)"> 円`:''}
     <input class="w" value="${esc(item.cat)}" placeholder="カテゴリ" onchange="edit(${item.id},'cat',this.value)">
     <input class="s" value="${esc(item.e)}" placeholder="絵文字" maxlength="4" onchange="edit(${item.id},'e',this.value)">
+    ${item.d!==undefined?`<input class="w" value="${esc(item.d)}" placeholder="メニュー説明" onchange="edit(${item.id},'d',this.value)">`:''}
     <button onclick="toggleSold(${item.id})">${item.x?'販売再開':'欠品にする'}</button><button class="danger" onclick="removeItem(${item.id})">削除</button></div>
     <div class="row muted">オプション：${(item.o||[]).map((option,i)=>`<span><input class="w" value="${esc(option.n)}" onchange="editOption(${item.id},${i},'n',this.value)"> +<input class="n" type="number" min="0" step="1" value="${option.p}" onchange="editOption(${item.id},${i},'p',Number(this.value))">円 <button class="danger" onclick="removeOption(${item.id},${i})">×</button></span>`).join('')}<button onclick="addOption(${item.id})">＋ オプション</button></div></div>`).join('')}</section>`).join('')}`;
 }
@@ -126,32 +143,44 @@ function removeOption(id,index){const item=find(id);if(!item||!item.o)return;ite
 window.addEventListener('firebase-auth-changed',async event=>{
   isStaff=event.detail.isStaff;
   if(isStaff){
-    try{await firebaseSync.ensureMenu(DEFAULT_MENU);await mergeDrinkMenu()}
+    try{await firebaseSync.ensureMenu(DEFAULT_MENU);await mergeSeededMenu()}
     catch(error){message='メニューを読み込めません。'}
   }
   render();
 });
-async function mergeDrinkMenu(){
+async function mergeSeededMenu(){
   if(!isStaff||!menuLoaded||migrating)return;
   const ids=new Set(menu.map(item=>item.id));
   const additions=[...DRINK_MENU,...EXTRA_MENU].filter(item=>!ids.has(item.id));
   const candidate=menu.map(item=>({...item}));
   const beer=candidate.find(item=>item.id===14);
   const updateBeer=beer&&!Number.isFinite(Number(beer.memberPrice))&&beer.p===500;
-  if(!additions.length&&!updateBeer)return;
+  const seededIds=new Set([...EXTRA_MENU.map(item=>item.id),7]);
+  let updatedOptions=0,updatedDescriptions=0;
+  candidate.forEach(item=>{
+    if(!seededIds.has(item.id))return;
+    const seeded=[...DEFAULT_MENU,...EXTRA_MENU].find(entry=>entry.id===item.id);
+    if(seeded?.o){
+      const existing=item.o||[];
+      const missing=seeded.o.filter(option=>!existing.some(current=>current.n===option.n));
+      if(missing.length){item.o=[...existing,...missing.map(option=>({...option}))];updatedOptions+=missing.length}
+    }
+    if(seeded?.d&&!item.d){item.d=seeded.d;updatedDescriptions++}
+  });
+  if(!additions.length&&!updateBeer&&!updatedOptions&&!updatedDescriptions)return;
   migrating=true;
   if(updateBeer){beer.memberPrice=500;beer.p=550;beer.o=[{n:'男前（大）ジョッキ',p:150}]}
   const nextMenu=[...candidate,...additions.map(item=>({...item}))];
   await firebaseSync.saveMenu(nextMenu);
   menu=nextMenu;
-  message=`ドリンクメニューを${additions.length}品追加しました。`;
+  message=`新メニュー${additions.length}品、ナン変更オプション${updatedOptions}件、セット説明${updatedDescriptions}件を反映しました。`;
   render();
   migrating=false;
 }
 window.addEventListener('firebase-menu',event=>{
   if(Array.isArray(event.detail.menu)){
     menu=event.detail.menu;menuLoaded=true;render();
-    mergeDrinkMenu().catch(error=>{migrating=false;message='新ドリンクを保存できませんでした。Firebaseルールを更新してください。';render()});
+    mergeSeededMenu().catch(error=>{migrating=false;message='新メニューを保存できませんでした。Firebaseルールを更新してください。';render()});
   }
 });
 window.addEventListener('firebase-sync-error',event=>{message=event.detail?.message||'データベースに接続できません。';render()});

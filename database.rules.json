@@ -99,6 +99,9 @@
         "e": {
           ".validate": "newData.isString() && newData.val().length <= 16"
         },
+        "d": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        },
         "x": {
           ".validate": "newData.isBoolean()"
         },
