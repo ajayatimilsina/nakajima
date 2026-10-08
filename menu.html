@@ -62,11 +62,18 @@ const DRINK_MENU=[
  {id:78,cat:'ドリンク',n:'オレンジジュース',p:400,memberPrice:350,e:'🍊'},
  {id:79,cat:'ドリンク',n:'オールフリー小瓶',p:440,memberPrice:390,e:'🍺'}
 ];
+const EXTRA_MENU=[
+ {id:80,cat:'ナンセット',n:'チーズナンセット',p:1045,e:'🧀'},
+ {id:81,cat:'ナンセット',n:'バターチキンセット',p:990,e:'🍛'},
+ {id:82,cat:'ナンセット',n:'ほうれん草セット',p:990,e:'🍛'},
+ {id:83,cat:'サブメニュー',n:'サントリー生ビールとチキンティッカ（2個）',p:800,e:'🍺'}
+];
 const DEFAULT_MENU=[
  {id:1,cat:'定食',n:'唐揚げ定食',p:800,e:''},{id:2,cat:'定食',n:'あじまる唐揚げ定食',p:900,e:''},{id:3,cat:'定食',n:'とんかつ定食',p:880,e:''},{id:4,cat:'定食',n:'みそとんかつ定食',p:900,e:''},{id:5,cat:'定食',n:'アジフライ定食',p:850,e:''},{id:6,cat:'定食',n:'ミックスフライ定食',p:920,e:''},
  {id:7,cat:'ナンセット',n:'プレーンナンセット',p:770,e:''},{id:8,cat:'サブメニュー',n:'ご飯 小',p:150,e:'🍚'},{id:9,cat:'サブメニュー',n:'ご飯 中',p:200,e:'🍚'},{id:10,cat:'サブメニュー',n:'ご飯 大',p:250,e:'🍚'},{id:15,cat:'サブメニュー',n:'その他',p:100,e:''},
  {id:14,cat:'ドリンク',n:'生ビール',p:550,memberPrice:500,e:'🍺',o:[{n:'男前（大）ジョッキ',p:150}]},{id:16,cat:'飲み放題ドリンク',n:'その他（飲み物）',p:0,e:'🥤'},
- ...DRINK_MENU
+ ...DRINK_MENU,
+ ...EXTRA_MENU
 ];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let menu=DEFAULT_MENU.map(item=>({...item})),isStaff=false,message='',menuLoaded=false,migrating=false;
@@ -127,7 +134,7 @@ window.addEventListener('firebase-auth-changed',async event=>{
 async function mergeDrinkMenu(){
   if(!isStaff||!menuLoaded||migrating)return;
   const ids=new Set(menu.map(item=>item.id));
-  const additions=DRINK_MENU.filter(item=>!ids.has(item.id));
+  const additions=[...DRINK_MENU,...EXTRA_MENU].filter(item=>!ids.has(item.id));
   const candidate=menu.map(item=>({...item}));
   const beer=candidate.find(item=>item.id===14);
   const updateBeer=beer&&!Number.isFinite(Number(beer.memberPrice))&&beer.p===500;

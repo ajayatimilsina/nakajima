@@ -72,6 +72,12 @@ const DEFAULT_DRINKS=[
  {id:78,cat:'ドリンク',n:'オレンジジュース',p:400,memberPrice:350,e:'🍊'},
  {id:79,cat:'ドリンク',n:'オールフリー小瓶',p:440,memberPrice:390,e:'🍺'}
 ];
+const DEFAULT_EXTRA_MENU=[
+ {id:80,cat:'ナンセット',n:'チーズナンセット',p:1045,e:'🧀'},
+ {id:81,cat:'ナンセット',n:'バターチキンセット',p:990,e:'🍛'},
+ {id:82,cat:'ナンセット',n:'ほうれん草セット',p:990,e:'🍛'},
+ {id:83,cat:'サブメニュー',n:'サントリー生ビールとチキンティッカ（2個）',p:800,e:'🍺'}
+];
 const drinkTypes=[{id:1,n:'生'},{id:2,n:'ハイボール'},{id:3,n:'レモンサワー'},{id:4,n:'お茶'},{id:5,n:'麦焼酎'},{id:6,n:'芋焼酎'}];
 const shochuOptions=['水割り','お湯割り','お茶割り','ソーダ割り'];
 const FIXED_CATS=['定食','ナンセット','サブメニュー','ドリンク','飲み放題ドリンク','ラーメン'];
@@ -168,7 +174,7 @@ window.addEventListener('firebase-menu',event=>{
  if(Array.isArray(event.detail.menu)){
   const remote=event.detail.menu;
   const remoteIds=new Set(remote.map(item=>item.id));
-  MENU=[...remote,...DEFAULT_DRINKS.filter(item=>!remoteIds.has(item.id))];
+  MENU=[...remote,...[...DEFAULT_DRINKS,...DEFAULT_EXTRA_MENU].filter(item=>!remoteIds.has(item.id))];
   MENU.filter(item=>item.x&&cart[item.id]).forEach(item=>{cart[item.id]=0;itemOptions(item).forEach((option,i)=>{optQty[item.id+':'+i]=0})});
   draw();
  }
