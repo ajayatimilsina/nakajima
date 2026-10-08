@@ -60,7 +60,7 @@
           ".validate": "newData.isBoolean() && auth.token.email === 'ajayatimilsina1@gmail.com'"
         },
         "payMethod": {
-          ".validate": "(newData.val() === 'cash' || newData.val() === 'credit' || newData.val() === 'paypay') && auth.token.email === 'ajayatimilsina1@gmail.com'"
+          ".validate": "(newData.val() === 'cash' || newData.val() === 'credit' || newData.val() === 'paypay' || newData.val() === 'paypal') && auth.token.email === 'ajayatimilsina1@gmail.com'"
         },
         "paidAt": {
           ".validate": "newData.isNumber() && auth.token.email === 'ajayatimilsina1@gmail.com'"

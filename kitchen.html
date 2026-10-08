@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>あじまるや | 厨房ディスプレイ</title>
+<style>
+:root{box-sizing:border-box;--bg:#14191d;--card:#1e262c;--tx:#eceae4;--mut:#9aa6ae;--ac:#5bb5d6;--bd:#33404a;--ok:#5fc283;--warn:#e0a030}
+*{box-sizing:inherit}body{margin:0;background:var(--bg);color:var(--tx);font:18px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:12px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--bd)}
+header b{font-size:20px}header a{color:var(--ac)}main{padding:14px}
+button{font:inherit;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px 16px;cursor:pointer}.primary{background:var(--ac);color:#102028;border-color:var(--ac);font-weight:bold}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.card{background:var(--card);border:2px solid var(--bd);border-radius:10px;padding:12px}.card.new{border-color:var(--warn)}.card.preparing{border-color:var(--ac)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.muted{color:var(--mut);font-size:14px}.item{font-size:22px;font-weight:bold;margin:4px 0}
+.tag{border-radius:99px;padding:2px 10px;font-size:13px;color:#102028;background:var(--warn)}.card.preparing .tag{background:var(--ac)}
+.allergy{color:#ff8a80;font-weight:bold}
+</style>
+</head>
+<body>
+<header><b>厨房ディスプレイ</b><a href="admin.html">お会計</a><a href="menu.html">メニュー管理</a><span id="auth"></span></header>
+<main id="app"></main>
+<script type="module" src="firebase-sync.js"></script>
+<script>
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let orders=[],isStaff=false,message='',knownKeys=null;
+function beep(){try{const ctx=new (window.AudioContext||window.webkitAudioContext)(),osc=ctx.createOscillator();osc.connect(ctx.destination);osc.frequency.value=880;osc.start();osc.stop(ctx.currentTime+.25)}catch(error){}}
+function render(){
+  const app=document.getElementById('app');
+  document.getElementById('auth').innerHTML=isStaff?`<button onclick="firebaseSync.signOut()">ログアウト</button>`:'';
+  if(!isStaff){app.innerHTML=`<p>スタッフ用Googleアカウントでログインしてください。</p><button class="primary" onclick="login()">Googleでログイン</button>${message?`<p role="alert">${esc(message)}</p>`:''}`;return}
+  const active=orders.filter(order=>!order.paid&&order.status!=='served').sort((a,b)=>a.t-b.t);
+  app.innerHTML=`${message?`<p role="alert">${esc(message)}</p>`:''}${active.length?`<div class="grid">${active.map(order=>{
+    const time=new Date(order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'}),mins=Math.max(0,Math.floor((Date.now()-order.t)/60000));
+    return `<div class="card ${order.status==='preparing'?'preparing':'new'}"><div class="row"><b style="font-size:26px">Table ${order.table}</b><span class="tag">${order.status==='new'?'新規':'調理中'}</span></div>
+    <div class="muted">#${order.id} · ${time}（${mins}分前）· 大人${order.adultCount} 子${order.childCount}</div>
+    ${order.allergy==='あり'?'<div class="allergy">⚠ アレルギーあり</div>':''}
+    <div style="margin:8px 0">${order.items.map(item=>`<div class="item">${esc(item.n)} × ${item.q}</div>`).join('')}</div>
+    <div class="row">${order.status==='new'?`<button class="primary" onclick="setStatus('${order.key}','preparing')">調理開始</button>`:''}<button class="primary" onclick="setStatus('${order.key}','served')">提供済み</button></div></div>`}).join('')}</div>`:'<p class="muted">調理待ちの注文はありません。</p>'}`;
+}
+async function login(){try{await firebaseSync.signInStaff();message=''}catch(error){message=error.message}render()}
+async function setStatus(key,status){try{await firebaseSync.updateOrder(key,{status});message=''}catch(error){message='更新できませんでした。通信状態を確認してください。'}render()}
+window.addEventListener('firebase-auth-changed',event=>{isStaff=event.detail.isStaff;if(!isStaff){orders=[];knownKeys=null}render()});
+window.addEventListener('firebase-orders',event=>{
+  orders=event.detail.orders;
+  const keys=new Set(orders.map(order=>order.key));
+  if(knownKeys&&orders.some(order=>!knownKeys.has(order.key)&&order.status==='new'))beep();
+  knownKeys=keys;render();
+});
+window.addEventListener('firebase-sync-error',event=>{message=event.detail?.message||'データベースに接続できません。';render()});
+setInterval(()=>{if(isStaff)render()},60000);
+render();
+</script>
+</body>
+</html>

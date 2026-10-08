@@ -26,7 +26,7 @@ h2{font-size:17px;margin:0 0 8px}table{border-collapse:collapse;width:100%}td,th
 <body>
 <header>
   <b>あじまるや お会計・厨房</b>
-  <a href="menu.html">メニュー管理</a><a href="index.html">お客様画面</a>
+  <a href="kitchen.html">厨房ディスプレイ</a><a href="menu.html">メニュー管理</a><a href="index.html">お客様画面</a>
   <span id="auth" class="muted"></span>
   <label><input type="checkbox" id="auto" checked> 新規注文を厨房に自動印刷</label>
 </header>
@@ -36,7 +36,7 @@ h2{font-size:17px;margin:0 0 8px}table{border-collapse:collapse;width:100%}td,th
 <script>
 const yen=n=>'¥'+Math.round(n).toLocaleString();
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const METHODS={cash:'現金',credit:'クレジット',paypay:'PayPay'};
+const METHODS={cash:'現金',credit:'クレジット',paypay:'PayPay',paypal:'PayPal'};
 const total=order=>order.items.reduce((sum,item)=>sum+item.p*item.q,0);
 const dayKey=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 let orders=[],isStaff=false,day=dayKey(Date.now()),message='';
