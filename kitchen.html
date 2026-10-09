@@ -49,8 +49,8 @@ function speakText(text){
   return true;
 }
 function orderSpeechText(order){
-  const items=order.items.filter(item=>remainingQty(item)>0).map(item=>`${item.n}、${remainingQty(item)}点`).join('。');
-  return `新しい注文です。テーブル${order.table}。注文番号${order.id}。${items||'商品はありません。'}。${order.allergy==='あり'?'アレルギーがあります。':''}`;
+  const items=order.items.filter(item=>remainingQty(item)>0).map(item=>item.n).join('。');
+  return `テーブル${order.table}。${items}`;
 }
 function sayThankYou(){speakText('ありがとうございました。')}
 function welcomeCustomer(){speakText('いらっしゃいませ。')}
