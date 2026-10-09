@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js';
-import { get, getDatabase, onChildAdded, onChildChanged, onChildRemoved, onValue, push, ref, remove, set, update } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
+import { get, getDatabase, onValue, push, ref, remove, runTransaction, set, update } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
 import { deleteObject, getDownloadURL, getStorage, ref as storageRef, uploadBytes } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-storage.js';
 
 const firebaseConfig = {
@@ -23,7 +23,6 @@ const storage = getStorage(app);
 const ownOrders = new Map();
 const customerListeners = new Set();
 const watchedOrders = new Map();
-const staffOrders = new Map();
 let staffOrdersListener = null;
 
 function emit(name, detail) {
@@ -158,28 +157,15 @@ onValue(ref(database, 'menu'), snapshot => {
 function listenForStaffOrders(user) {
   if (!isStaff(user) || staffOrdersListener) return;
   const ordersRef = ref(database, 'orders');
-  const publish = () => emit('firebase-orders', {
-    orders: [...staffOrders.values()].sort((a, b) => a.t - b.t)
-  });
-  const handleError = error => emit('firebase-sync-error', { message: error.message });
-  const stopAdded = onChildAdded(ordersRef, snapshot => {
-    staffOrders.set(snapshot.key, { ...snapshot.val(), key: snapshot.key });
-    publish();
-  }, handleError);
-  const stopChanged = onChildChanged(ordersRef, snapshot => {
-    staffOrders.set(snapshot.key, { ...snapshot.val(), key: snapshot.key });
-    publish();
-  }, handleError);
-  const stopRemoved = onChildRemoved(ordersRef, snapshot => {
-    staffOrders.delete(snapshot.key);
-    publish();
-  }, handleError);
-  staffOrdersListener = () => {
-    stopAdded();
-    stopChanged();
-    stopRemoved();
-    staffOrders.clear();
-  };
+  let initial = true;
+  const stop = onValue(ordersRef, snapshot => {
+    const orders = [];
+    snapshot.forEach(child => orders.push({ ...child.val(), key: child.key }));
+    orders.sort((a, b) => a.t - b.t);
+    emit('firebase-orders', { orders, initial });
+    initial = false;
+  }, error => emit('firebase-sync-error', { message: error.message }));
+  staffOrdersListener = stop;
 }
 
 onAuthStateChanged(auth, user => {
@@ -201,6 +187,14 @@ window.firebaseSync = {
   signOut: () => signOut(auth),
   uploadMenuPhoto,
   updateOrder: (key, patch) => update(ref(database, `orders/${key}`), patch),
+  claimKitchenPrint: async key => {
+    const result = await runTransaction(ref(database, `orders/${key}`), order => {
+      if (!order || order.kitchenPrinted) return;
+      order.kitchenPrinted = true;
+      return order;
+    });
+    return result.committed;
+  },
   deleteOrder: key => remove(ref(database, `orders/${key}`)),
   startCustomer
 };

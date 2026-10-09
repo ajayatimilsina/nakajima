@@ -86,7 +86,7 @@ function kitchenHtml(order){
   return order.items.map((item,i)=>`<div class="slip"><h3>厨房 Table ${order.table}</h3><div>注文 #${order.id} · ${time} · ${order.items.length}品中 ${i+1}</div><hr><div class="big">${esc(item.n)} × ${item.q}</div><hr><div>人数 大人${order.adultCount} 子${order.childCount}${order.allergy==='あり'?' ／ <b>アレルギーあり</b>':''}</div></div>`).join('');
 }
 async function printKitchen(order){
-  try{await firebaseSync.updateOrder(order.key,{kitchenPrinted:true})}catch(error){message='印刷済みの記録に失敗しました。';render();return}
+  try{if(!await firebaseSync.claimKitchenPrint(order.key))return}catch(error){message='印刷の重複防止を記録できませんでした。';render();return}
   enqueue(kitchenHtml(order));
 }
 function printPendingKitchen(){orders.filter(order=>order.status==='new'&&!order.kitchenPrinted).forEach(printKitchen)}
