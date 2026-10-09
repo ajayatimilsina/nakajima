@@ -80,7 +80,20 @@ function watchCustomerOrder(key, uid) {
     if (order && order.customerUid === uid) ownOrders.set(key, { ...order, key });
     else ownOrders.delete(key);
     publishCustomerOrders();
-  }, error => emit('firebase-sync-error', { message: error.message }));
+  }, error => {
+    // 削除済み・他ユーザーの注文はルール上読めないため、保存済みキーから外して無視する
+    if (/permission/i.test(`${error.code} ${error.message}`)) {
+      watchedOrders.get(key)?.();
+      watchedOrders.delete(key);
+      ownOrders.delete(key);
+      try {
+        localStorage.setItem(CUSTOMER_ORDER_KEYS, JSON.stringify(customerOrderKeys().filter(saved => saved !== key)));
+      } catch (storageError) {}
+      publishCustomerOrders();
+      return;
+    }
+    emit('firebase-sync-error', { message: error.message });
+  });
   watchedOrders.set(key, unsubscribe);
 }
 
