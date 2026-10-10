@@ -102,9 +102,6 @@
         "d": {
           ".validate": "newData.isString() && newData.val().length <= 500"
         },
-        "photo": {
-          ".validate": "newData.isString() && newData.val().length <= 2000"
-        },
         "x": {
           ".validate": "newData.isBoolean()"
         },
