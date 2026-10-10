@@ -98,8 +98,7 @@ function orderSpeechText(order){
   const items=order.items.filter(item=>remainingQty(item)>0).map(item=>item.n).join('。');
   return `テーブル${order.table}。${items}`;
 }
-function sayThankYou(){speakText('ありがとうございました。')}
-function welcomeCustomer(){speakText('いらっしゃいませ。')}
+function greetAloud(){speakText('ありがとうございました。いらっしゃいませ。')}
 function scheduleOrderSpeech(order){
   if(scheduledSpeechKeys.has(order.key))return;
   scheduledSpeechKeys.add(order.key);
@@ -130,7 +129,7 @@ function render(){
   if(!isStaff){app.innerHTML=`<p>スタッフ用Googleアカウントでログインしてください。</p><button class="primary" onclick="login()">Googleでログイン</button>${message?`<p role="alert">${esc(message)}</p>`:''}`;return}
   const active=orders.filter(order=>!order.paid).sort((a,b)=>a.t-b.t);
   const status=`<p class="muted">ログイン中：${esc(staffEmail)} ・ 受信した注文：${orders.length}件${connected?'':' ・ ⚠ 接続待ち'}</p>`;
-  app.innerHTML=`${status}<div class="row" style="margin:10px 0"><span>注文の自動読み上げ：${speechEnabled?'有効（新規注文ごとに1回）':'無効'}${speechQueue.size?` ・ 未読み上げ ${speechQueue.size}件`:''}</span><button onclick="toggleSpeech()">${speechEnabled?'自動読み上げを停止':'自動読み上げを有効化'}</button><button onclick="sayThankYou()">ありがとうございました</button><button onclick="welcomeCustomer()">いらっしゃいませ</button></div>${message?`<p role="alert" style="color:#ff8a80">${esc(message)}</p>`:''}${active.length?`<div class="grid">${active.map(order=>{
+  app.innerHTML=`${status}<div class="row" style="margin:10px 0"><span>注文の自動読み上げ：${speechEnabled?'有効（新規注文ごとに1回）':'無効'}${speechQueue.size?` ・ 未読み上げ ${speechQueue.size}件`:''}</span><button onclick="toggleSpeech()">${speechEnabled?'自動読み上げを停止':'自動読み上げを有効化'}</button><button onclick="greetAloud()">「ありがとうございました。いらっしゃいませ。」</button></div>${message?`<p role="alert" style="color:#ff8a80">${esc(message)}</p>`:''}${active.length?`<div class="grid">${active.map(order=>{
     const time=new Date(order.t).toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
     const statusClass=order.status==='served'?'served':order.status==='preparing'?'preparing':'new';
     const statusLabel=order.status==='served'?'提供済み・未会計':order.status==='preparing'?'調理中':'新規';
