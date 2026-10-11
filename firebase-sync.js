@@ -3,14 +3,14 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInAnonymously, sig
 import { get, getDatabase, onValue, push, ref, remove, runTransaction, set, update } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-database.js';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAk81HxCeRB3IGekGcsE9OVHmi1sFdLwYM',
-  authDomain: 'ajimaru-bcbef.firebaseapp.com',
-  databaseURL: 'https://ajimaru-bcbef-default-rtdb.firebaseio.com',
-  projectId: 'ajimaru-bcbef',
-  storageBucket: 'ajimaru-bcbef.firebasestorage.app',
-  messagingSenderId: '893250502168',
-  appId: '1:893250502168:web:76740b65a9ca60953fcd6d',
-  measurementId: 'G-H39ZKMVY25'
+  apiKey: 'AIzaSyBq1xj8h2hRp_ZzIxHTALb6rMtvSOZJQ8o',
+  authDomain: 'anivaajimaru.firebaseapp.com',
+  databaseURL: 'https://anivaajimaru-default-rtdb.firebaseio.com',
+  projectId: 'anivaajimaru',
+  storageBucket: 'anivaajimaru.firebasestorage.app',
+  messagingSenderId: '308884440439',
+  appId: '1:308884440439:web:c464ea26859d24988c0d72',
+  measurementId: 'G-22HE8SE1DM'
 };
 
 const STAFF_EMAIL = 'ajayatimilsina1@gmail.com';
